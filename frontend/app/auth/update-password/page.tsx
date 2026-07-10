@@ -2,7 +2,7 @@
 
 import { StatusMessage } from "@/types/auth";
 import { useEffect, useState, useTransition } from "react";
-import { updatePassword } from "./actions";
+import { updatePassword } from "../actions";
 import {
   Card,
   CardContent,
@@ -68,18 +68,22 @@ export default function UpdatePasswordPage() {
   };
 
   return (
-    <Card>
+    <Card className="w-full max-w-sm mb-auto ml-auto mr-auto mt-[16vh]">
       <CardHeader>
-        <CardTitle>Update your Password</CardTitle>
-        <CardDescription>
-          You have been authenticated, let's reset your password!
+        <CardTitle className="text-xl font-bold">
+          Update your Password
+        </CardTitle>
+        <CardDescription className="text-base">
+          Yippee! You have been authenticated, let's reset your password.
         </CardDescription>
       </CardHeader>
 
       <form action={handleUpdatePassword}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 mb-4">
           <Field>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <FieldLabel htmlFor="password" className="text-sm">
+              Password
+            </FieldLabel>
             <Input
               id="password"
               name="password"
@@ -92,8 +96,8 @@ export default function UpdatePasswordPage() {
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="passwordConfirmation">
-              Password Confirmation
+            <FieldLabel htmlFor="passwordConfirmation" className="text-sm">
+              Re-Type Password
             </FieldLabel>
             <Input
               id="passwordConfirmation"
@@ -105,7 +109,7 @@ export default function UpdatePasswordPage() {
               onChange={handleInputChange}
             />
             <FieldDescription>
-              Make sure the password confirmation matches with your password!
+              Make sure both password matches.
             </FieldDescription>
           </Field>
 
@@ -116,7 +120,7 @@ export default function UpdatePasswordPage() {
               )}
               {alertMessage.type === "error" && <CircleX className="h-4 w-4" />}
 
-              <AlertDescription className="w-full">
+              <AlertDescription className="text-small">
                 {alertMessage.text}
               </AlertDescription>
             </Alert>
@@ -137,7 +141,7 @@ export default function UpdatePasswordPage() {
             type="submit"
             disabled={isPending}
             variant="default"
-            className="w-full"
+            className="w-full cursor-pointer"
           >
             {isPending ? (
               <>

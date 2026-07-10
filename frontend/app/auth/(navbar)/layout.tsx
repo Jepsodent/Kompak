@@ -18,9 +18,9 @@ export default function AuthNavbarLayout({
   ];
 
   return (
-    <div className="flex flex-col items-center gap-6 bg-background text-foreground mt-[10vh]">
+    <div className="w-full max-w-sm mb-auto ml-auto mr-auto mt-[16vh] flex flex-col gap-4">
       {/* AuthNavbar*/}
-      <div className="flex gap-1.5 rounded-xl border border-border bg-card p-1.5 shadow-md">
+      <div className="flex gap-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
 
@@ -29,12 +29,10 @@ export default function AuthNavbarLayout({
               key={item.href}
               href={item.href}
               className={cn(
-                "rounded-lg px-5 py-2 text-sm font-medium transition-all duration-200",
+                "rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200",
                 isActive
-                  ? // Active State: maps directly to your secondary/accent backgrounds
-                    "bg-accent text-accent-foreground border border-border shadow-sm"
-                  : // Inactive States: maps cleanly to muted themes
-                    "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                  ? "bg-card ring-1 ring-foreground/10 shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent",
               )}
             >
               {item.name}

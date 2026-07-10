@@ -14,8 +14,9 @@ import { Input } from "@/components/ui/input";
 import { StatusMessage } from "@/types/auth";
 import { CheckCircle2, CircleX } from "lucide-react";
 import { useState, useTransition } from "react";
-import { sendPasswordResetLink } from "./actions";
 import Link from "next/link";
+import { sendPasswordResetLink } from "../actions";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function ForgotPasswordPage() {
   const [isPending, startTransition] = useTransition();
@@ -43,19 +44,21 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <Card>
+    <Card className="w-full max-w-sm mb-auto ml-auto mr-auto mt-[16vh]">
       <CardHeader>
-        <CardTitle>Forgot Password?</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-xl font-bold">Forgot Password?</CardTitle>
+        <CardDescription className="text-base">
           Passwords are annoying aren't they? Fill the form below and we'll send
           you a link to reset them
         </CardDescription>
       </CardHeader>
 
       <form action={handleSendPasswordResetLink}>
-        <CardContent className="mb-4 space-y-4">
+        <CardContent className="space-y-4 mb-4">
           <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <FieldLabel htmlFor="email" className="text-sm">
+              Email
+            </FieldLabel>
             <Input
               id="email"
               name="email"
@@ -74,7 +77,7 @@ export default function ForgotPasswordPage() {
               )}
               {alertMessage.type === "error" && <CircleX className="h-4 w-4" />}
 
-              <AlertDescription className="w-full">
+              <AlertDescription className="text-sm">
                 {alertMessage.text}
               </AlertDescription>
             </Alert>
@@ -86,11 +89,20 @@ export default function ForgotPasswordPage() {
             type="submit"
             disabled={isPending}
             variant="default"
-            className="w-full"
+            className="w-full text-sm cursor-pointer"
           >
-            Send Link
+            {isPending ? (
+              <>
+                <Spinner /> <span>Sending...</span>
+              </>
+            ) : (
+              "Send Link"
+            )}
           </Button>
-          <Link href="/auth/login">Back to login</Link>
+
+          <Link href="/auth/login" className="text-sm font-semibold text-brand">
+            Back to login
+          </Link>
         </CardFooter>
       </form>
     </Card>

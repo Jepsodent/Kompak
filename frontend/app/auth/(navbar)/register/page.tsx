@@ -15,7 +15,8 @@ import { Input } from "@/components/ui/input";
 import { StatusMessage } from "@/types/auth";
 import { CheckCircle2, CircleX } from "lucide-react";
 import { useState, useTransition } from "react";
-import { registerWithEmail } from "./actions";
+import { register } from "../../actions";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function RegisterPage() {
   const [isPending, startTransition] = useTransition();
@@ -41,7 +42,7 @@ export default function RegisterPage() {
     setRegisterMessage({ text: "", type: null });
 
     startTransition(async () => {
-      const result = await registerWithEmail(formData);
+      const result = await register(formData);
       setRegisterMessage(result);
 
       if (result.type === "success") {
@@ -58,14 +59,16 @@ export default function RegisterPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Register a New Account</CardTitle>
-        <CardDescription>
-          Now account yet? No worries, just fill the inputs below
+        <CardTitle className="text-xl font-bold">
+          Register a New Account
+        </CardTitle>
+        <CardDescription className="text-base">
+          No account yet? No worries, just fill the inputs below and register.
         </CardDescription>
       </CardHeader>
 
       <form action={handleRegister}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 mb-4">
           <Field>
             <FieldLabel htmlFor="username">Username</FieldLabel>
             <Input
@@ -107,7 +110,7 @@ export default function RegisterPage() {
 
           <Field>
             <FieldLabel htmlFor="passwordConfirmation">
-              Password Confirmation
+              Re-Type Password
             </FieldLabel>
             <Input
               id="passwordConfirmation"
@@ -119,7 +122,7 @@ export default function RegisterPage() {
               onChange={handleInputChange}
             />
             <FieldDescription>
-              Make sure the password confirmation matches with your password!
+              Make sure both password matches.
             </FieldDescription>
           </Field>
 
@@ -146,7 +149,13 @@ export default function RegisterPage() {
             variant="default"
             className="w-full"
           >
-            Register
+            {isPending ? (
+              <>
+                <Spinner /> Registering...
+              </>
+            ) : (
+              "Register"
+            )}
           </Button>
         </CardFooter>
       </form>

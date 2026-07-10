@@ -15,12 +15,13 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, CircleX } from "lucide-react";
-import { loginWithMagicLink, loginWithProvider } from "./actions";
 import { StatusMessage } from "@/types/auth";
+import { loginWithMagicLink, loginWithProvider } from "../../actions";
+import { Icons } from "@/components/ui/icons";
 
 export default function QuickLoginPage() {
   const [isPending, startTransition] = useTransition();
-  const [oauthMessage, setOauthMessage] = useState<StatusMessage>({
+  const [oauthAlertMessage, setOauthMessage] = useState<StatusMessage>({
     text: "",
     type: null,
   });
@@ -53,48 +54,65 @@ export default function QuickLoginPage() {
   }
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-xl font-semibold">Quick Login</CardTitle>
-        <CardDescription className="text-muted-foreground">
-          Logic quickly with these provided options
+        <CardTitle className="text-xl font-bold">Quick Login</CardTitle>
+        <CardDescription className="text-base">
+          Login quickly with these provided options
         </CardDescription>
       </CardHeader>
 
-      <form action={handleMagicLinkSubmit} className="space-y-4">
-        <CardContent className="space-y-8">
+      <form action={handleMagicLinkSubmit}>
+        <CardContent className="space-y-8 mb-4">
           {/* Section 1: Login with Providers */}
-          <div className="space-y-4">
-            <h3 className="text-base font-bold">Login with Providers</h3>
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Login with Providers</h3>
+
             <div className="space-y-2">
               <Button
                 type="button"
                 disabled={isPending}
                 variant="default"
-                className="w-full"
+                className="w-full cursor-pointer"
                 onClick={() => handleProviderLogin("google")}
               >
                 Continue with Google
+                <Icons.google className="w-4 h-4" />
               </Button>
+
               <Button
                 type="button"
                 disabled={isPending}
                 variant="default"
-                className="w-full"
+                className="w-full cursor-pointer"
                 onClick={() => handleProviderLogin("github")}
               >
-                Continue with GitHub
+                Continue with GitHub <Icons.gitHub className="w-4 h-4" />
               </Button>
             </div>
+
+            {oauthAlertMessage.type && (
+              <Alert variant={oauthAlertMessage.type}>
+                {oauthAlertMessage.type === "success" && (
+                  <CheckCircle2 className="h-4 w-4" />
+                )}
+                {oauthAlertMessage.type === "error" && (
+                  <CircleX className="h-4 w-4" />
+                )}
+
+                <AlertDescription className="text-sm">
+                  {oauthAlertMessage.text}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Section 2: Login with Magic Links */}
-
-          <div className="space-y-4">
-            <h3 className="text-base font-bold">Login with Magic Links</h3>
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Login with Magic Links</h3>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm text-muted-foreground">
+              <Label htmlFor="email" className="text-sm">
                 Email
               </Label>
               <Input
@@ -116,7 +134,7 @@ export default function QuickLoginPage() {
                   <CircleX className="h-4 w-4" />
                 )}
 
-                <AlertDescription className="w-full">
+                <AlertDescription className="text-sm">
                   {magicLinkMessage.text}
                 </AlertDescription>
               </Alert>
@@ -129,7 +147,7 @@ export default function QuickLoginPage() {
             type="submit"
             disabled={isPending}
             variant="default"
-            className="w-full"
+            className="w-full cursor-pointer"
           >
             {isPending ? (
               <>

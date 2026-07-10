@@ -14,9 +14,10 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { StatusMessage } from "@/types/auth";
 import { CheckCircle2, CircleX } from "lucide-react";
-import Link from "next/link";
 import { useState, useTransition } from "react";
-import { loginWithEmail } from "./actions";
+import { loginWithEmail } from "../../actions";
+import { Spinner } from "@/components/ui/spinner";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [isPending, startTransition] = useTransition();
@@ -46,14 +47,17 @@ export default function LoginPage() {
   };
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>Login an account</CardTitle>
-        <CardDescription>Let's log you in</CardDescription>
+        <CardTitle className="text-xl font-bold">Login</CardTitle>
+        <CardDescription className="text-base">
+          Already have an account? Awesome! Input your credentials below and
+          login.
+        </CardDescription>
       </CardHeader>
 
       <form action={handleLogin}>
-        <CardContent className="mb-4 space-y-4">
+        <CardContent className="space-y-4 mb-4">
           <Field>
             <FieldLabel htmlFor="email">Email</FieldLabel>
             <Input
@@ -79,7 +83,12 @@ export default function LoginPage() {
               onChange={handleInputChange}
             />
             <FieldDescription className="flex justify-end">
-              <Link href="/auth/forgot-password">Forgot Password?</Link>
+              <Link
+                href="/auth/forgot-password"
+                className="text-sm font-semibold text-brand"
+              >
+                Forgot Password?
+              </Link>
             </FieldDescription>
           </Field>
 
@@ -102,9 +111,15 @@ export default function LoginPage() {
             type="submit"
             disabled={isPending}
             variant="default"
-            className="w-full"
+            className="w-full cursor-pointer"
           >
-            Login
+            {isPending ? (
+              <>
+                <Spinner /> <span>Logging in...</span>
+              </>
+            ) : (
+              "Login"
+            )}
           </Button>
         </CardFooter>
       </form>
