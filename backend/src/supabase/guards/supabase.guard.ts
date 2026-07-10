@@ -1,13 +1,13 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { SupabaseService } from "../supabase.service";
-import { Request } from "express";
+import { RequestWithUser } from "../../types/user-types";
 
 @Injectable()
 export class SupabaseGuard implements CanActivate {
     constructor(private readonly supabaseService: SupabaseService){} //role admin key bypass rls
     
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        const request = context.switchToHttp().getRequest<Request>(); 
+        const request = context.switchToHttp().getRequest<RequestWithUser>(); 
         const token =  request.headers.authorization?.replace('Bearer ','');
         if(!token) throw new UnauthorizedException('No token provided!')
         

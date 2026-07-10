@@ -16,7 +16,7 @@ export class SupabaseRequestService {
         const token = this.request.headers.authorization?.replace('Bearer ', '');
         this.client = createClient<Database>(
             this.configService.get<string>('SUPABASE_URL')!,
-            this.configService.get<string>('SUPABASE_ANON_KEY')!,
+            this.configService.get<string>('SUPABASE_PUBLISHABLE_KEY')!,
             {
                 global: {
                     headers: {Authorization: `Bearer ${token}`}
