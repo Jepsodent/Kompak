@@ -1,11 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { SupabaseRequestService } from 'src/supabase/supabase-request.service';
 import { EditProjectDto } from './dto/edit-project.dto';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { ProjectRole } from 'src/common/enums/project-role.enum';
 
 @Injectable()
 export class ProjectsService {
-    constructor(private readonly supabase: SupabaseRequestService){}
+    constructor(private readonly supabase: SupabaseRequestService, private readonly jwtService:JwtService, private readonly configService:ConfigService){}
 
     async createProject(dto:CreateProjectDto, userId:string){
         const {data, error} = await this.supabase.client.from('projects').insert({
@@ -58,9 +61,42 @@ export class ProjectsService {
         if(deletedError){
             throw new BadRequestException('Delete Failed: '+ deletedError?.message )
         }
-        return {message: `Project ${data.title} successfully deleted`}
-
-        
+        return {message: `Project ${data.title} successfully deleted`}        
     }
+
+    generateInvitation(projectId:string){
+        const token = this.jwtService.sign({projectId})
+        const frontendUrl = this.configService.get<string>("FRONTEND_URL")
+        return `${frontendUrl}/invitations/${token}`
+    }
+    verifyToken(token:string): {projectId:string} {
+        try {
+            const payload = this.jwtService.verify<{projectId:string}>(token); 
+            return payload
+        } catch (error) {
+            if(error instanceof Error && error.name === 'TokenExpiredError'){
+                throw new BadRequestException('Invitation Link has already expired')
+            }
+            throw new BadRequestException("Invalid Invitation Link!")
+            
+        }
+    }
+    async joinInvitation(token:string, userId:string){
+        const payload =  this.verifyToken(token)
+        const {data:existingMember} =  await this.supabase.client.from('project_members').select('id').eq('project_id',payload.projectId).eq('profile_id',userId).single()
+        if(existingMember){
+            throw new ConflictException('You have already become a member of the project')
+        }
+        const{data, error} = await this.supabase.client.from('project_members').insert({
+            project_id: payload.projectId,
+            profile_id: userId,
+            role: ProjectRole.MEMBER,
+            membership_status: 'ACTIVE'
+        }).select().single()
+        if(error) throw new BadRequestException(error.message)
+        return data;
+    }
+
+
 
 }

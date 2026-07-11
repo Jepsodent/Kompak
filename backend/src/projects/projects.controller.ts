@@ -39,5 +39,16 @@ export class ProjectsController {
     return this.projectsService.deleteProject(projectId)
   }
 
+  @Post(':projectId/invitations')
+  @Roles(ProjectRole.LEADER)
+  generateInvitation(@Param('projectId') projectId:string){
+    return this.projectsService.generateInvitation(projectId)
+  }
+  @Post('join')
+  joinInvitation(@Body('token') token:string, @CurrentUser() user:User){
+    return this.projectsService.joinInvitation(token, user.id)
+  }
+
+
 
 }

@@ -13,7 +13,10 @@ import * as Joi from 'joi';
         SUPABASE_URL: Joi.string().required(),
         SUPABASE_PUBLISHABLE_KEY: Joi.string().required(),
         SUPABASE_SECRET_KEY: Joi.string().required(),
+        INV_JWT_SECRET: Joi.string().default('2d'),
+        INV_JWT_EXPIRES_IN: Joi.string().required(),
         PORT: Joi.number().default(3000),
+        FRONTEND_URL: Joi.string().default('http://localhost:3001')
         //nanti lagi kalo ada yg wajib
       }),
     }),
