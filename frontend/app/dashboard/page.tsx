@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { logOut } from "../auth/actions";
+import { logOut } from "../(auth)/actions";
 
 export default function DashboardPage() {
   return (

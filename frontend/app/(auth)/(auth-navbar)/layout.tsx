@@ -12,9 +12,9 @@ export default function AuthNavbarLayout({
   const pathname = usePathname();
 
   const navItems = [
-    { name: "Quick Login", href: "/auth/quick-login" },
-    { name: "Login", href: "/auth/login" },
-    { name: "Register", href: "/auth/register" },
+    { name: "Quick Login", href: "/quick-login" },
+    { name: "Login", href: "/login" },
+    { name: "Register", href: "/register" },
   ];
 
   return (

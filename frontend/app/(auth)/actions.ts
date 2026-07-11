@@ -1,5 +1,15 @@
 "use server";
 
+import {
+  LoginFormValues,
+  loginSchema,
+  MagicLinkFormValues,
+  magicLinkSchema,
+  RegisterFormValues,
+  registerSchema,
+  UpdatePasswordFormValues,
+  updatePasswordSchema,
+} from "@/schemas/auth";
 import { StatusMessage } from "@/types/auth";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
@@ -9,13 +19,17 @@ type ProviderLoginResponse = StatusMessage & {
 };
 
 export async function loginWithEmail(
-  formData: FormData,
+  data: LoginFormValues,
 ): Promise<StatusMessage> {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  if (!email || !password) {
-    return { type: "error", text: "All fields are required!" };
+  const result = loginSchema.safeParse(data);
+  if (!result.success) {
+    return {
+      type: "error",
+      text: "Parsing failed because of invalid form data.",
+    };
   }
+
+  const { email, password } = result.data;
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
@@ -31,21 +45,22 @@ export async function loginWithEmail(
 }
 
 export async function loginWithMagicLink(
-  formData: FormData,
+  data: MagicLinkFormValues,
 ): Promise<StatusMessage> {
-  const email = formData.get("email") as string;
-  if (!email) {
+  const result = magicLinkSchema.safeParse(data);
+  if (!result.success) {
     return {
       type: "error",
-      text: "Email address is required!",
+      text: "Parsing failed because of invalid form data.",
     };
   }
 
+  const { email } = result.data;
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/dashboard`,
     },
   });
   if (error) {
@@ -68,7 +83,7 @@ export async function loginWithProvider(
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/dashboard`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/dashboard`,
     },
   });
   if (error) {
@@ -88,21 +103,17 @@ export async function loginWithProvider(
   };
 }
 
-export async function register(formData: FormData): Promise<StatusMessage> {
-  const username = formData.get("username") as string;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const passwordConfirmation = formData.get("passwordConfirmation") as string;
-
-  if (!username || !email || !password || !passwordConfirmation) {
-    return { type: "error", text: "All fields are required!" };
-  }
-  if (password !== passwordConfirmation) {
+export async function registerUserAction(
+  data: RegisterFormValues,
+): Promise<StatusMessage> {
+  const result = registerSchema.safeParse(data);
+  if (!result.success) {
     return {
       type: "error",
-      text: "Passwords do not match. Please match them up!",
+      text: "Parsing failed because of invalid form data.",
     };
   }
+  const { username, email, password } = result.data;
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
@@ -112,11 +123,18 @@ export async function register(formData: FormData): Promise<StatusMessage> {
       data: {
         display_name: username,
       },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/dashboard`,
     },
   });
+  console.log(error);
   if (error) {
-    return { type: "error", text: error.message };
+    return {
+      type: "error",
+      text:
+        error.message ||
+        String(error) ||
+        "An unexpected authentication error occurred.",
+    };
   }
 
   return {
@@ -126,16 +144,21 @@ export async function register(formData: FormData): Promise<StatusMessage> {
 }
 
 export async function sendPasswordResetLink(
-  formData: FormData,
+  data: MagicLinkFormValues,
 ): Promise<StatusMessage> {
-  const email = formData.get("email") as string;
-  if (!email) {
-    return { type: "error", text: "Email address is required!" };
+  const result = magicLinkSchema.safeParse(data);
+  if (!result.success) {
+    return {
+      type: "error",
+      text: "Parsing failed because of invalid form data.",
+    };
   }
+
+  const { email } = result.data;
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/auth/update-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/update-password`,
   });
   if (error) {
     return { type: "error", text: error.message };
@@ -148,19 +171,17 @@ export async function sendPasswordResetLink(
 }
 
 export async function updatePassword(
-  formData: FormData,
+  data: UpdatePasswordFormValues,
 ): Promise<StatusMessage> {
-  const password = formData.get("password") as string;
-  const passwordConfirmation = formData.get("passwordConfirmation") as string;
-  if (!password || !passwordConfirmation) {
-    return { type: "error", text: "All fields are required!" };
-  }
-  if (password !== passwordConfirmation) {
+  const result = updatePasswordSchema.safeParse(data);
+  if (!result.success) {
     return {
       type: "error",
-      text: "Passwords do not match. Please check again!",
+      text: "Parsing failed because of invalid form data.",
     };
   }
+
+  const { password } = result.data;
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({
@@ -185,5 +206,5 @@ export async function logOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
 
-  redirect("/auth/login");
+  redirect("/quick-login");
 }
