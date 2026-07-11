@@ -41,7 +41,7 @@ export async function loginWithEmail(
     return { type: "error", text: error.message };
   }
 
-  redirect("/dashboard");
+  redirect("/app/overview");
 }
 
 export async function loginWithMagicLink(
@@ -60,7 +60,7 @@ export async function loginWithMagicLink(
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/app/overview`,
     },
   });
   if (error) {
@@ -83,7 +83,7 @@ export async function loginWithProvider(
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/dashboard`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/app/overview`,
     },
   });
   if (error) {
@@ -123,7 +123,7 @@ export async function registerUserAction(
       data: {
         display_name: username,
       },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/app/overview`,
     },
   });
   console.log(error);
