@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +15,7 @@ async function bootstrap() {
       enableImplicitConversion: true, //auto convert string -> number
     }
   }))
+  app.useGlobalInterceptors(new TransformInterceptor())
   const config = new DocumentBuilder()
   .setTitle('Kompak API')
   .setDescription('API Documentation')

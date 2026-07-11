@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards, Param, Patch, Get } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Param, Patch, Get, Delete } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { SupabaseGuard } from 'src/supabase/guards/supabase.guard';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -33,6 +33,11 @@ export class ProjectsController {
     return this.projectsService.getProjectById(projectId)
   }
 
+  @Delete(':projectId')
+  @Roles(ProjectRole.LEADER)
+  async deleteProject(@Param('projectId') projectId:string){
+    return this.projectsService.deleteProject(projectId)
+  }
 
 
 }

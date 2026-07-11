@@ -48,4 +48,19 @@ export class ProjectsService {
         }
         return data
     }
+
+    async deleteProject(projectId:string){
+        const {data, error} = await this.supabase.client.from('projects').select().eq('id',projectId).single()
+        if(!data || error){
+            throw new NotFoundException('Project Not Found')
+        }
+        const {error: deletedError} = await this.supabase.client.from('projects').delete().eq('id',projectId)
+        if(deletedError){
+            throw new BadRequestException('Delete Failed: '+ deletedError?.message )
+        }
+        return {message: `Project ${data.title} successfully deleted`}
+
+        
+    }
+
 }
