@@ -6,6 +6,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ProjectRole } from 'src/common/enums/project-role.enum';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
+import { CreateLinkDto } from './dto/create-link.dto';
+import { UpdateLinkDto } from './dto/update-link.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -148,6 +150,69 @@ export class ProjectsService {
         }
         return data
     }
+
+
+    //quick-link management
+    async createLink(projectId:string, userId:string, dto:CreateLinkDto){
+        const {data:project, error:errorProject} = await this.supabase.client.from('projects').select('id').eq('id',projectId).single()
+        if(!project || errorProject ) {
+            throw new NotFoundException('Project not found')
+        }
+        const {data:member, error:memberError} = await this.supabase.client.from('project_members').select('id').eq('profile_id', userId).eq('project_id',projectId).eq('membership_status','ACTIVE').single()
+        
+        if(!member || memberError){
+            throw new NotFoundException('Member not found')
+        }
+
+        const {data, error} = await this.supabase.client.from('quick_links').insert({
+            ...dto,
+            created_by_member_id: member.id ,
+            project_id: projectId,
+        }).select().single()
+
+        if(!data || error){
+            throw new BadRequestException(error?.message ?? 'Failed to create link')
+        }
+        return data
+    }
+
+    async updateLink(projectId:string,quickLinkId:string,  userId:string, dto:UpdateLinkDto){
+        const {data:project, error:errorProject} = await this.supabase.client.from('projects').select('id').eq('id',projectId).single()
+        if(!project || errorProject ) {
+            throw new NotFoundException('Project not found')
+        }
+        const {data:member, error:memberError} = await this.supabase.client.from('project_members').select('id').eq('profile_id', userId).eq('project_id',projectId).eq('membership_status','ACTIVE').single()
+        if(!member || memberError){
+            throw new NotFoundException('Member not found')
+        }
+        const {data, error} = await this.supabase.client.from('quick_links').update({
+            ...dto,
+            updated_by_member_id: member.id,
+            updated_at: new Date().toISOString(),
+        }).eq('id',quickLinkId).eq('project_id',projectId).select().single()
+
+        if(!data || error){
+            throw new BadRequestException(error?.message ?? 'Failed to update link')
+        }
+        return data    
+    }
+
+    async deleteLink(projectId:string, quickLinkId:string){
+        const {data:project, error:errorProject} = await this.supabase.client.from('projects').select('id').eq('id',projectId).single()
+        if(!project || errorProject ) {
+            throw new NotFoundException('Project not found')
+        }
+        const {data,error }=  await this.supabase.client.from('quick_links').delete().eq('id',quickLinkId).eq('project_id',projectId).select().single()
+        if(!data || error){
+            throw new BadRequestException(error?.message ?? 'Failed to delete link')
+        }
+        return {
+            message: 'Quick link successfully deleted'
+        }
+    }
+    
+
+
 
 
 }

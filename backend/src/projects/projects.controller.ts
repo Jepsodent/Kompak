@@ -10,6 +10,8 @@ import { ProjectRole } from 'src/common/enums/project-role.enum';
 import { RoleGuard } from 'src/common/guards/roles.guard';
 import { EditProjectDto } from './dto/edit-project.dto';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
+import { CreateLinkDto } from './dto/create-link.dto';
+import { UpdateLinkDto } from './dto/update-link.dto';
 
 @Controller('projects')
 @ApiBearerAuth('access-token')
@@ -50,6 +52,7 @@ export class ProjectsController {
     return this.projectsService.joinInvitation(token, user.id)
   }
 
+  // project member management
   @Get(':projectId/members')
   @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
   async getAllMember(@Param('projectId') projectId:string){
@@ -67,5 +70,24 @@ export class ProjectsController {
   async deleteMember(@Param('projectId') projectId:string, @Param('memberId') memberId:string){
     return this.projectsService.deleteMember(projectId,memberId)
   }
+
+  // quick links
+  @Post(':projectId/quick-links')
+  @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
+  async createLink(@Param('projectId')projectId:string, @CurrentUser() user:User, @Body() dto:CreateLinkDto){
+    return this.projectsService.createLink(projectId, user.id, dto)
+  }
+
+  @Patch(':projectId/quick-links/:quickLinkId')
+  @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
+  async updateLink(@Param('projectId') projectId:string, @Param('quickLinkId') quickLinkId:string, @CurrentUser() user:User, @Body() dto:UpdateLinkDto){
+    return this.projectsService.updateLink(projectId,quickLinkId, user.id, dto)
+  }
   
+  @Delete(':projectId/quick-links/:quickLinkId')
+  @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
+  async deleteLink(@Param('projectId') projectId:string, @Param('quickLinkId') quickLinkId:string){
+    return this.projectsService.deleteLink(projectId,quickLinkId)
+  }
+
 }
