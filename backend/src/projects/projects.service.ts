@@ -5,6 +5,7 @@ import { EditProjectDto } from './dto/edit-project.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ProjectRole } from 'src/common/enums/project-role.enum';
+import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -97,6 +98,56 @@ export class ProjectsService {
         return data;
     }
 
+    // get all members whtever the status is (active , left , removed)
+    async getAllMember(projectId:string){
+        const {data:project,  error:projectError} = await this.supabase.client.from('projects').select().eq('id',projectId).single()
+        if(projectError || !project){
+            throw new NotFoundException('Project not found')
+        }
+        const {data, error} = await this.supabase.client.from('project_members').select('*, profiles(name,email,profile_image_url)').eq('project_id',projectId)
+        if(error) throw new BadRequestException(error.message)
+        return data;
+    }
+
+    async updateMemberRole(projectId:string, memberId:string, dto:UpdateMemberRoleDto, userId:string){
+        const {data:project, error:errorProject} = await this.supabase.client.from('projects').select().eq('id',projectId).single()
+        if(!project || errorProject){
+            throw new NotFoundException('Project not found')
+        }
+        if(memberId === userId && dto.role === ProjectRole.MEMBER){
+            const {data:leader} = await this.supabase.client.from('project_members').select().eq('project_id',projectId).eq('membership_status','ACTIVE').eq('role',ProjectRole.LEADER)
+
+            if(leader && leader.length <= 1){
+                throw new BadRequestException("There must be at least one Leader in the project")
+            }
+        }
+        const {data, error} = await this.supabase.client.from('project_members').update({role: dto.role}).eq('project_id',projectId).eq('profile_id',memberId).select().single()
+        if(error) throw new BadRequestException(error.message)
+        return data
+    }
+
+    async deleteMember(projectId:string, memberId:string){
+        const {data:project, error:errorProject} =  await this.supabase.client.from('projects').select('id').eq('id',projectId).single()
+        if(!project|| errorProject) throw new NotFoundException('Project not found')
+        
+        const {data:memberProject, error:memberError} = await this.supabase.client.from('project_members').select('role').eq('profile_id',memberId).eq('project_id',projectId).single()
+        
+        if(!memberProject || memberError){
+            throw new NotFoundException("Member not found")
+        }
+        if(memberProject.role === (ProjectRole.LEADER as string)){
+            const {data:leader} =  await this.supabase.client.from('project_members').select('id').eq('project_id',projectId).eq('membership_status','ACTIVE').eq('role',ProjectRole.LEADER)
+            if(leader && leader.length <= 1){
+                throw new BadRequestException('There must be at least one Leader in the project')
+            }
+        }
+    
+        const {data, error} = await this.supabase.client.from('project_members').delete().eq('profile_id',memberId).eq('project_id',projectId).select().single()
+        if(error || !data){
+            throw new NotFoundException("Member not found")
+        }
+        return data
+    }
 
 
 }

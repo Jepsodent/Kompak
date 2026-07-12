@@ -9,6 +9,7 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { ProjectRole } from 'src/common/enums/project-role.enum';
 import { RoleGuard } from 'src/common/guards/roles.guard';
 import { EditProjectDto } from './dto/edit-project.dto';
+import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 
 @Controller('projects')
 @ApiBearerAuth('access-token')
@@ -49,6 +50,22 @@ export class ProjectsController {
     return this.projectsService.joinInvitation(token, user.id)
   }
 
+  @Get(':projectId/members')
+  @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
+  async getAllMember(@Param('projectId') projectId:string){
+    return this.projectsService.getAllMember(projectId)
+  }
 
+  @Patch(':projectId/members/:memberId')
+  @Roles(ProjectRole.LEADER)
+  async updateMemberRole(@Param('projectId') projectId:string, @Param('memberId') memberId:string, @Body() dto:UpdateMemberRoleDto, @CurrentUser() user:User){
+    return this.projectsService.updateMemberRole(projectId, memberId, dto, user.id)
+  }
 
+  @Delete(':projectId/members/:memberId')
+  @Roles(ProjectRole.LEADER)
+  async deleteMember(@Param('projectId') projectId:string, @Param('memberId') memberId:string){
+    return this.projectsService.deleteMember(projectId,memberId)
+  }
+  
 }
