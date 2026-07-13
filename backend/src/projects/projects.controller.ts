@@ -90,4 +90,12 @@ export class ProjectsController {
     return this.projectsService.deleteLink(projectId,quickLinkId)
   }
 
+  //dashboard
+  @Get(':projectId/dashboard')
+  @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
+  async getProjectDashboard(@Param('projectId') projectId:string){
+    return this.projectsService.getProjectDashboard(projectId)
+  }
+
+
 }

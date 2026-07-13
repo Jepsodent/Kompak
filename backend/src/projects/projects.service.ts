@@ -8,6 +8,9 @@ import { ProjectRole } from 'src/common/enums/project-role.enum';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 import { CreateLinkDto } from './dto/create-link.dto';
 import { UpdateLinkDto } from './dto/update-link.dto';
+import { DashboardStats, TaskDistribution, TaskWithStatus } from '../common/interface/project.interface';
+
+
 
 @Injectable()
 export class ProjectsService {
@@ -211,8 +214,67 @@ export class ProjectsService {
         }
     }
     
+    async getProjectDashboard(projectId:string){
+        const {data:project , error:projectError} = await this.supabase.client.from('projects').select('id').eq('id',projectId).single()
+        if(!project || projectError){
+            throw new NotFoundException('Project not found')
+        }
+        const [taskResults, quickLinksResult, membersResult] = await Promise.all([
+            this.getTaskStats(projectId),
+            this.getQuickLinks(projectId),
+            this.getMembers(projectId),
+        ])
+        return {
+            stats: {
+                total_tasks: taskResults.total_tasks,
+                completion_rate: taskResults.completion_rate,
+                task_distribution: taskResults.task_distribution
+            },
+            tasks: taskResults.tasks,
+            quick_links: quickLinksResult,
+            members: membersResult
+        }
 
+    }
+    private async getTaskStats(projectId:string): Promise<DashboardStats>{
+        const {data: tasks, error} = await this.supabase.client.from('tasks').select('id,title,due_date, task_statuses(code)').eq('project_id',projectId).returns<TaskWithStatus[]>();
+        if(error){
+            throw new BadRequestException(error.message)
+        }
+        const totalTasks = tasks.length
+        const taskDistribution: TaskDistribution = {
+            TODO: 0,
+            IN_PROGRESS: 0,
+            IN_REVIEW: 0,
+            DONE: 0
+        }
+        for (const task of tasks){
+            const statusCode = task.task_statuses?.code;
+            if(statusCode && statusCode in taskDistribution){
+                taskDistribution[statusCode as keyof TaskDistribution]++;
+            }
+        }
+        const done_tasks = taskDistribution.DONE
+        const completion_rate = totalTasks > 0 ? Math.round((done_tasks / totalTasks) * 100) : 0;
+        
+        return {
+            total_tasks: totalTasks,
+            completion_rate,
+            tasks: tasks || [],
+            task_distribution: taskDistribution
+        }
+    }
+    private async getQuickLinks(projectId:string){
+        const {data, error} = await this.supabase.client.from('quick_links').select('*').eq('project_id',projectId)
+        if(error) throw new BadRequestException(error.message)
+        return data
+    }
 
+    private async getMembers(projectId:string){
+        const {data, error} = await this.supabase.client.from('project_members').select('*, profiles(name, profile_image_url, email)').eq('project_id',projectId).eq('membership_status','ACTIVE')
+        if(error) throw new BadRequestException(error.message)
+        return data
+    }
 
 
 }

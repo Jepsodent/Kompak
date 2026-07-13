@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { ConfigModule } from '@nestjs/config';
 import { SupabaseModule } from './supabase/supabase.module';
 import { ProjectsModule } from './projects/projects.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import * as Joi from 'joi';
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import * as Joi from 'joi';
     }),
     SupabaseModule,
     ProjectsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [],
