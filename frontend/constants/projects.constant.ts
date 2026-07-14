@@ -29,8 +29,7 @@ export const PROJECTS: Project[] = [
     color: "emerald",
     joinedDate: "2024-07-12",
     status: "ACTIVE",
-    objective:
-      "Rebuild the internal operating system as a modular, event-driven platform that any product team can extend without waiting on a central release train.",
+    objective: '',
     method:
       "Ship a domain-oriented monorepo with independently versioned packages. Migrate the payments and identity domains first, then dogfood the new SDK for two quarters before opening it to all teams.",
     expectedResult:
