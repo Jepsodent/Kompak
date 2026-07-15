@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, LayoutDashboard, Plus, ChevronDown, X } from "lucide-react";
+import { Plus, ChevronDown, X , Folder} from "lucide-react";
 import { useState } from "react";
-import { PROJECTS } from "@/constants/projects.constant";
 import { CURRENT_USER } from "@/constants/users.constant";
 import { MAIN_NAV } from "@/constants/sidebar.constant";
-import { CreateProjectDialog } from "./create-project-dialog";
 import { useUIStore } from "@/lib/stores/navbar.store";
 import {
   DropdownMenu,
@@ -15,20 +13,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+import { cn, getProjectColor } from "@/lib/utils";
+import { useDashboard } from "@/hooks/useDashboard";
+import { useCreateProject } from "@/hooks/useCreateProject";
 
-const dotColor: Record<string, string> = {
-  emerald: "bg-emerald-500/100 ring-emerald-500/15",
-  amber: "bg-amber-500/100 ring-amber-500/15",
-  primary: "bg-primary ring-primary/15",
-  violet: "bg-violet-500 ring-violet-500/15",
-  rose: "bg-rose-500 ring-rose-500/15",
-};
 
 export function AppSidebar() {
   const [createOpen, setCreateOpen] = useState(false);
   const pathname = usePathname();
-  const projects = PROJECTS;
+  const {data} = useDashboard()
+  const {handleCreateProject, isCreating} = useCreateProject()
+
+
+  const projects = data?.recent_projects || [];
   const { sidebarOpen, setSidebarOpen } = useUIStore();
 
   const visible = projects.slice(0, 3);
@@ -92,9 +89,10 @@ export function AppSidebar() {
               My Projects
             </span>
             <button
-              onClick={() => setCreateOpen(true)}
+              onClick={handleCreateProject}
               className="size-5 flex items-center justify-center hover:bg-foreground/5 rounded transition-colors text-muted-foreground"
               aria-label="Create project"
+              disabled= {isCreating}
             >
               <Plus className="size-3.5" />
             </button>
@@ -113,12 +111,29 @@ export function AppSidebar() {
                   }`}
                 >
                   <span
-                    className={`size-2 rounded-full ring-4 shrink-0 ${dotColor[p.color] ?? dotColor.primary}`}
+                    className={`size-2 rounded-full ring-4 shrink-0 ${getProjectColor(p.id)}`}
                   />
-                  <span className="truncate">{p.name}</span>
+                  <span className="truncate">{p.title}</span>
                 </Link>
               );
             })}
+            {(visible.length === 0 && overflow.length === 0) && (
+              <div className="flex flex-col items-center justify-center gap-2 py-6 px-4 mt-4 text-center border border-dashed border-border/60 rounded-lg bg-foreground/[0.01]">
+                {/* Ikon folder berukuran sedang dengan warna pudar */}
+                <Folder className="size-5 text-muted-foreground/30 stroke-[1.5]" />
+                
+                {/* Teks utama */}
+                <span className="text-xs font-medium text-muted-foreground/80">
+                  No projects created
+                </span>
+                
+                {/* Instruksi tambahan */}
+                <span className="text-[10px] text-muted-foreground/50 leading-normal max-w-[150px]">
+                  Click the &quot;+&quot; button above to start your first project
+                </span>
+              </div>
+            )}
+
 
             {overflow.length > 0 && (
               <DropdownMenu>
@@ -136,9 +151,9 @@ export function AppSidebar() {
                         className="flex items-center gap-2"
                       >
                         <span
-                          className={`size-2 rounded-full ring-2 ${dotColor[p.color] ?? dotColor.primary}`}
+                          className={`size-2 rounded-full ring-2 ${getProjectColor(p.id)}`}
                         />
-                        <span className="truncate">{p.name}</span>
+                        <span className="truncate">{p.title}</span>
                       </Link>
                     </DropdownMenuItem>
                   ))}
@@ -160,8 +175,6 @@ export function AppSidebar() {
           </div>
         </div>
       </aside>
-
-      <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
     </>
   );
 }

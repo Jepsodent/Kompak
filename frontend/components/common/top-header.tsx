@@ -2,13 +2,13 @@
 
 import { Bell, Plus, Search, Menu } from "lucide-react";
 import { useState } from "react";
-import { CreateProjectDialog } from "./create-project-dialog";
 import Link from "next/link";
 import { useUIStore } from "@/lib/stores/navbar.store";
+import { useCreateProject } from "@/hooks/useCreateProject";
 
 export function TopHeader() {
-  const [createOpen, setCreateOpen] = useState(false);
   const { toggleSidebar } = useUIStore();
+  const {handleCreateProject, isCreating} =  useCreateProject()
 
   return (
     <>
@@ -41,8 +41,9 @@ export function TopHeader() {
             <span className="size-1.5 bg-primary rounded-full absolute top-2 right-2.5" />
           </Link>
           <button
-            onClick={() => setCreateOpen(true)}
+            onClick={() => handleCreateProject()}
             className="px-3.5 py-2 bg-primary text-primary-foreground rounded-full text-xs font-semibold hover:brightness-110 transition inline-flex items-center gap-1.5 shadow-lg shadow-primary/20"
+            disabled={isCreating}
           >
             <Plus className="size-3.5" />
             <span className="hidden sm:inline">Create Project</span>
@@ -50,7 +51,6 @@ export function TopHeader() {
         </div>
       </header>
 
-      <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
     </>
   );
 }
