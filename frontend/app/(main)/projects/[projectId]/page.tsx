@@ -3,22 +3,23 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Share2 } from "lucide-react";
-import { PROJECTS } from "@/constants/projects.constant";
 import { ShareDialog } from "@/components/common/share-dialog";
 import { ProjectSummaryTab } from "./_components/project-summary-tab";
 import { ProjectBoardTab } from "./_components/project-board-tab";
 import { ProjectListTab } from "./_components/project-list-tab";
 import { EditableText } from "@/components/common/editable-text";
-import { toast } from "sonner";
+import { useProjectDetails } from "@/hooks/useProjectDetails";
+import { getInitials } from "@/lib/utils";
 
 type Tab = "summary" | "board" | "list";
 
 export default function ProjectPage() {
-  const params = useParams<{ projectId: string }>();
-  const project = PROJECTS.find((p) => p.id === params?.projectId);
-  
+  const params = useParams<{ projectId: string }>();  
   const [tab, setTab] = useState<Tab>("summary");
   const [shareOpen, setShareOpen] = useState(false);
+
+  const {project ,members,dashboard, isLoading, updateProject} = useProjectDetails(params.projectId);
+  // console.log(project)
 
   if (!project) {
     return (
@@ -28,11 +29,15 @@ export default function ProjectPage() {
       </div>
     );
   }
+  if(isLoading){
+    return <div className="p-12 text-center text-muted-foreground h-[calc(100vh-64px)] flex items-center justify-center">Loading project...</div>;
+  }
 
-  // Mock update logic
-  const updateProjectName = (name: string) => {
-    toast.success(`Project renamed to ${name} (Mock)`);
-  };
+  const handleSaveName = (newName: string) => {
+    if(newName !== project.title){
+      updateProject({title:newName})
+    }
+  }
 
   return (
     <div className="p-6 md:p-8 max-w-[1800px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -44,8 +49,8 @@ export default function ProjectPage() {
               Project
             </p>
             <EditableText
-              value={project.name}
-              onSave={updateProjectName}
+              value={project.title}
+              onSave={handleSaveName}
               label="project name"
               textClassName="text-3xl md:text-4xl font-display font-bold tracking-tight"
               className="mt-1"
@@ -53,23 +58,27 @@ export default function ProjectPage() {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex -space-x-2">
-              {project.members.slice(0, 5).map((m) => (
+              {members.slice(0, 5).map((m) => (
                 <div
                   key={m.id}
-                  className={`size-8 rounded-full ring-2 ring-background flex items-center justify-center text-[10px] font-semibold ${m.color}`}
-                  title={m.name}
+                  className={`size-8 rounded-full ring-2 ring-background flex items-center justify-center text-[10px] font-semibold bg-primary/15 text-primary`}
+                  title={m.profiles.name}
                 >
-                  {m.initials}
+                  {m.profiles.profile_image_url ? (
+                    <img src={m.profiles.profile_image_url} alt={m.profiles.name} className="w-full h-full object-cover"/>
+                  ) : (
+                    getInitials(m.profiles.name)
+                  )}
                 </div>
               ))}
-              {project.members.length > 5 && (
+              {members.length > 5 && (
                 <div className="size-8 rounded-full ring-2 ring-background bg-foreground/5 flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
-                  +{project.members.length - 5}
+                  +{members.length - 5}
                 </div>
               )}
             </div>
             <span className="text-sm text-muted-foreground font-medium">
-              {project.members.length} members
+              {members.length} members
             </span>
           </div>
         </div>
@@ -105,12 +114,12 @@ export default function ProjectPage() {
       </div>
 
       <div className="min-h-[500px]">
-        {tab === "summary" && <ProjectSummaryTab project={project} />}
-        {tab === "board" && <ProjectBoardTab project={project} />}
-        {tab === "list" && <ProjectListTab project={project} />}
+        {tab === "summary" && <ProjectSummaryTab project={project} onUpdate = {updateProject} stats={dashboard?.stats}/>}
+        {/* {tab === "board" && <ProjectBoardTab project={project} />} */}
+        {/* {tab === "list" && <ProjectListTab project={project} members={members} />} */}
       </div>
 
-      <ShareDialog open={shareOpen} onOpenChange={setShareOpen} projectName={project.name} />
+      <ShareDialog open={shareOpen} onOpenChange={setShareOpen} projectName={project.title} />
     </div>
   );
 }

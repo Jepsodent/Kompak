@@ -1,10 +1,11 @@
-import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 
 
 export class CreateProjectDto{
     @IsString()
     @IsNotEmpty({message: "Title required!"})
+    @MaxLength(30, {message: 'Title should not be more than 30 characters'})
     title: string;
 
     @IsString()

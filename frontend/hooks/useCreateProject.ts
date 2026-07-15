@@ -13,9 +13,10 @@ export function useCreateProject(){
         if (isCreating) return;
         setIsCreating(true)
         try {
-            const {data} = await ProjectService.createProject({title: "Untitled Project"})
+            const newProject = await ProjectService.createProject({title: "Untitled Project", background: "", expected_result: "", method: "",objective: ""
+            })
             // console.log(data.id)
-            router.push(`/projects/${data.id}`)
+            router.push(`/projects/${newProject.id}`)
         } catch (error) {
             toast.error('Failed to create a new project')
             console.error(error)

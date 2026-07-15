@@ -2,26 +2,21 @@
 
 import { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import type { Project, QuickLink } from "@/constants/projects.constant";
-import { TASKS } from "@/constants/tasks.constant";
+import type { QuickLink } from "@/constants/projects.constant";
 import { EditableText } from "@/components/common/editable-text";
 import { toast } from "sonner";
+import { DashboardStats, Project } from "@/types/project.type";
 
-export function ProjectSummaryTab({ project }: { project: Project }) {
-  const tasks = TASKS.filter(t => t.projectId === project.id);
-  const total = tasks.length || 1;
-  const done = tasks.filter((t) => t.status === "DONE").length;
-  const inProgress = tasks.filter((t) => t.status === "IN_PROGRESS").length;
-  const todo = tasks.filter((t) => t.status === "TODO").length;
-  const review = tasks.filter((t) => t.status === "REVIEW").length;
-  const completion = Math.round((done / total) * 100);
+export function ProjectSummaryTab({ project , onUpdate, stats} : { project: Project, onUpdate: (data: { title?: string; background?:string; objective?: string; method?: string; expected_result?: string }) => void, stats?: DashboardStats}) {
+  // console.log(stats)
+  const total = stats?.total_tasks || 0;
+  const completion = stats?.completion_rate || 0;
+  const todo = stats?.task_distribution?.TODO || 0;
+  const inProgress = stats?.task_distribution?.IN_PROGRESS || 0;
+  const review = stats?.task_distribution?.IN_REVIEW || 0; 
+  const done = stats?.task_distribution?.DONE || 0;
 
-  const [links, setLinks] = useState<QuickLink[]>(project.quickLinks);
-
-  // Mock updateProject for now
-  const updateProject = (id: string, updates: Partial<Project>) => {
-    toast.success(`Project ${Object.keys(updates).join(", ")} updated (mock)`);
-  };
+  const [links, setLinks] = useState<QuickLink[]>([]);
 
   function addLink() {
     const title = window.prompt("Link title?");
@@ -93,20 +88,26 @@ export function ProjectSummaryTab({ project }: { project: Project }) {
       {/* Grid Bawah */}
       <div className="lg:col-span-7 space-y-10 p-2">
         <EditableSection
-          title="Objective"
-          body={project.objective}
+          title="Background"
+          body={project.background || ""}
           // large -> jd gede / putih warnanya
-          onSave={(v) => updateProject(project.id, { objective: v })}
+          onSave={(v) => onUpdate({ background: v })}
+        />
+        <EditableSection
+          title="Objective"
+          body={project.objective || ""}
+          // large -> jd gede / putih warnanya
+          onSave={(v) => onUpdate({ objective: v })}
         />
         <EditableSection
           title="Method"
-          body={project.method}
-          onSave={(v) => updateProject(project.id, { method: v })}
+          body={project.method || ""}
+          onSave={(v) => onUpdate({ method: v })}
         />
         <EditableSection
           title="Expected Result"
-          body={project.expectedResult}
-          onSave={(v) => updateProject(project.id, { expectedResult: v })}
+          body={project.expected_result || ""}
+          onSave={(v) => onUpdate({ expected_result: v })}
         />
       </div>
 
@@ -218,7 +219,8 @@ function Donut({
   review: number;
   done: number;
 }) {
-  const total = Math.max(todo + inProgress + review + done, 1);
+  const realTotal = todo + inProgress + review + done;
+  
   const segments = [
     { key: "todo", value: todo, color: "oklch(0.55 0.02 258)", label: "Todo" },
     { key: "in", value: inProgress, color: "oklch(0.6 0.19 258)", label: "In Progress" },
@@ -226,11 +228,38 @@ function Donut({
     { key: "done", value: done, color: "oklch(0.7 0.16 155)", label: "Done" },
   ];
 
+  // Kalo totalnya 0 (kosong), kasih fallback UI abu-abu aja
+  if (realTotal === 0) {
+    return (
+      <div className="flex items-center gap-5">
+        <div className="relative shrink-0">
+          <div className="size-32 rounded-full bg-foreground/5" />
+          <div className="absolute inset-3 rounded-full bg-card flex flex-col items-center justify-center">
+            <span className="text-2xl font-display font-bold tracking-tight">0</span>
+            <span className="text-[9px] uppercase tracking-widest text-muted-foreground">tasks</span>
+          </div>
+        </div>
+        <div className="space-y-2 flex-1 min-w-0">
+          {segments.map((s) => (
+            <div key={s.key} className="flex items-center justify-between text-xs opacity-50">
+              <span className="flex items-center gap-2 min-w-0">
+                <span className="size-2 rounded-full shrink-0" style={{ background: s.color }} />
+                <span className="text-muted-foreground truncate">{s.label}</span>
+              </span>
+              <span className="font-semibold tabular-nums">0</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Kalau ada datanya, baru jalanin logic lama lu
   let cumulative = 0;
   const stops = segments.map((s) => {
-    const from = (cumulative / total) * 100;
+    const from = (cumulative / realTotal) * 100;
     cumulative += s.value;
-    const to = (cumulative / total) * 100;
+    const to = (cumulative / realTotal) * 100;
     return `${s.color} ${from}% ${to}%`;
   });
 
@@ -242,7 +271,7 @@ function Donut({
           style={{ background: `conic-gradient(${stops.join(", ")})` }}
         />
         <div className="absolute inset-3 rounded-full bg-card flex flex-col items-center justify-center">
-          <span className="text-2xl font-display font-bold tracking-tight">{total}</span>
+          <span className="text-2xl font-display font-bold tracking-tight">{realTotal}</span>
           <span className="text-[9px] uppercase tracking-widest text-muted-foreground">tasks</span>
         </div>
       </div>

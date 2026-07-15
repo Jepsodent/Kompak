@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { Project } from "@/constants/projects.constant";
 import type { Role } from "@/constants/users.constant";
 import { TASKS } from "@/constants/tasks.constant";
 import { CURRENT_USER } from "@/constants/users.constant";
@@ -15,6 +14,7 @@ import {
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DataTable, type ColumnDef } from "@/components/common/data-table";
+import { Project, ProjectMember } from "@/types/project.type";
 
 const statusTone: Record<string, string> = {
   TODO: "bg-muted text-muted-foreground",
@@ -27,11 +27,11 @@ function formatDay(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export function ProjectListTab({ project }: { project: Project }) {
+export function ProjectListTab({ project, members }: { project: Project, members: ProjectMember[] }) {
   const canManage = project.members.some(
     (m) => m.id === CURRENT_USER.id && m.role === "LEADER"
   );
-  const [members, setMembers] = useState(project.members);
+  const [initialMember, setMembers] = useState(project.members);
   const tasks = TASKS.filter((t) => t.projectId === project.id);
 
   function changeRole(id: string, role: Role) {

@@ -1,7 +1,7 @@
 "use client";
 
-import type { Project } from "@/constants/projects.constant";
 import { TASKS, type TaskStatus } from "@/constants/tasks.constant";
+import { Project } from "@/types/project.type";
 
 const columns: { status: TaskStatus; label: string; accent: string }[] = [
   { status: "TODO", label: "Todo", accent: "bg-muted-foreground/50" },
