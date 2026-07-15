@@ -5,9 +5,9 @@ import { useParams } from "next/navigation";
 import { Share2 } from "lucide-react";
 import { PROJECTS } from "@/constants/projects.constant";
 import { ShareDialog } from "@/components/common/share-dialog";
-import { ProjectSummaryTab } from "@/components/common/project-summary-tab";
-import { ProjectBoardTab } from "@/components/common/project-board-tab";
-import { ProjectListTab } from "@/components/common/project-list-tab";
+import { ProjectSummaryTab } from "./_components/project-summary-tab";
+import { ProjectBoardTab } from "./_components/project-board-tab";
+import { ProjectListTab } from "./_components/project-list-tab";
 import { EditableText } from "@/components/common/editable-text";
 import { toast } from "sonner";
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import type { Project, QuickLink } from "@/constants/projects.constant";
 import { TASKS } from "@/constants/tasks.constant";
-import { EditableText } from "./editable-text";
+import { EditableText } from "@/components/common/editable-text";
 import { toast } from "sonner";
 
 export function ProjectSummaryTab({ project }: { project: Project }) {
