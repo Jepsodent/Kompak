@@ -5,20 +5,14 @@ import { useState } from "react";
 import { DataTable, type ColumnDef } from "@/components/common/data-table";
 import { DashboardCalendar } from "./_components/dashboard-calendar";
 import { DueSoonPanel } from "./_components/due-soon-panel";
-import { PROJECTS } from "@/constants/projects.constant";
-import { TASKS } from "@/constants/tasks.constant";
 import { CURRENT_USER } from "@/constants/users.constant";
+import { DashboardRecentProject } from "@/types/dashboard.type";
+import { useDashboard } from "@/hooks/useDashboard";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
-type DashboardRecentProject = {
-  id: string;
-  title: string;
-  joined_at: string;
-  member_profile_image: string[];
-};
 
 const columns: ColumnDef<DashboardRecentProject>[] = [
   {
@@ -75,18 +69,11 @@ const columns: ColumnDef<DashboardRecentProject>[] = [
 ];
 
 export default function DashboardPage() {
-  const [selectedDate, setSelectedDate] = useState("2024-08-08");
-  
-  const unfinished = TASKS.filter((t) => t.assigneeId === CURRENT_USER.id && t.status !== "DONE");
-  
-  // Map mock data to the new backend format for now
-  const recent: DashboardRecentProject[] = PROJECTS.slice(0, 4).map((p) => ({
-    id: p.id,
-    title: p.name,
-    joined_at: p.joinedDate,
-    // Provide some fake URLs or empty strings for testing the UI based on member count
-    member_profile_image: p.members.map(() => "")
-  }));
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0,10));
+  const {data, loading ,error} = useDashboard()
+  if(loading || !data){
+    return <div className="p-12 text-center text-sm text-muted-foreground h-[50vh] flex items-center justify-center">Loading dashboard...</div>;
+  }
 
   return (
     <div className="p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1800px] mx-auto">
@@ -101,10 +88,10 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <StatCard label="Total Projects" value={PROJECTS.length} sub="active memberships" />
+        <StatCard label="Total Projects" value={data.total_projects} sub="active memberships" />
         <StatCard
           label="My Unfinished Tasks"
-          value={unfinished.length}
+          value={data.my_total_tasks}
           sub="across all projects"
           accent="warning"
         />
@@ -116,7 +103,7 @@ export default function DashboardPage() {
           <DashboardCalendar selectedDate={selectedDate} onSelect={setSelectedDate} />
         </div>
         <div>
-          <DueSoonPanel date={selectedDate} />
+          <DueSoonPanel date={selectedDate} tasks={data.tasks_due_soon} />
         </div>
       </section>
 
@@ -124,10 +111,9 @@ export default function DashboardPage() {
       <section className="bg-card rounded-2xl ring-1 ring-white/10 shadow-sm overflow-hidden overflow-x-auto">
         <div className="px-6 py-4 border-b border-border flex items-center justify-between min-w-[600px]">
           <h4 className="text-sm font-semibold">Recent Projects</h4>
-          <span className="text-xs text-muted-foreground">Showing {recent.length} of {PROJECTS.length}</span>
         </div>
         <div className="min-w-[600px] overflow-hidden group">
-          <DataTable columns={columns} data={recent} className="border-0 shadow-none rounded-none bg-transparent" />
+          <DataTable columns={columns} data={data.recent_projects} className="border-0 shadow-none rounded-none bg-transparent" />
         </div>
       </section>
     </div>

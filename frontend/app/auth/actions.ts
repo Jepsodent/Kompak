@@ -1,6 +1,6 @@
 "use server";
 
-import { StatusMessage } from "@/types/auth";
+import { StatusMessage } from "@/types/auth.type";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 

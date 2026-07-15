@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { StatusMessage } from "@/types/auth";
+import { StatusMessage } from "@/types/auth.type";
 import { CheckCircle2, CircleX } from "lucide-react";
 import { useState, useTransition } from "react";
 import Link from "next/link";

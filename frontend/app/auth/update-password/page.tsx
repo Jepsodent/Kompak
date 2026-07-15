@@ -1,6 +1,6 @@
 "use client";
 
-import { StatusMessage } from "@/types/auth";
+import { StatusMessage } from "@/types/auth.type";
 import { useEffect, useState, useTransition } from "react";
 import { updatePassword } from "../actions";
 import {

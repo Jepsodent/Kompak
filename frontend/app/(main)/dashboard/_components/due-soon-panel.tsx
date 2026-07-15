@@ -1,15 +1,14 @@
 "use client";
 
-import { TASKS } from "@/constants/tasks.constant";
-import { PROJECTS } from "@/constants/projects.constant";
-import { Plus } from "lucide-react";
+import { DueSoonTask } from "@/types/dashboard.type";
 
 function formatDay(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export function DueSoonPanel({ date }: { date: string }) {
-  const items = TASKS.filter((t) => t.dueDate === date);
+
+export function DueSoonPanel({ date, tasks }: { date: string, tasks:DueSoonTask[] }) {
+  const items = tasks.filter((t) => t.due_date === date);
 
   return (
     <div className="bg-card p-6 rounded-2xl ring-1 ring-white/10 shadow-sm space-y-4 h-full flex flex-col">
@@ -27,7 +26,7 @@ export function DueSoonPanel({ date }: { date: string }) {
           </div>
         )}
         {items.map((t) => {
-          const project = PROJECTS.find((p) => p.id === t.projectId);
+          // const project = PROJECTS.find((p) => p.id === t.id);
           return (
             <div
               key={t.id}
@@ -37,7 +36,7 @@ export function DueSoonPanel({ date }: { date: string }) {
                 {t.title}
               </p>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground">{project?.name}</span>
+                <span className="text-[10px] text-muted-foreground">{t.project_title}</span>
               </div>
             </div>
           );

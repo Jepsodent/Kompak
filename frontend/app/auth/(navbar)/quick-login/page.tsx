@@ -15,7 +15,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, CircleX } from "lucide-react";
-import { StatusMessage } from "@/types/auth";
+import { StatusMessage } from "@/types/auth.type";
 import { loginWithMagicLink, loginWithProvider } from "../../actions";
 import { Icons } from "@/components/ui/icons";
 
