@@ -3,46 +3,62 @@
 import Link from "next/link";
 import { useState } from "react";
 import { DataTable, type ColumnDef } from "@/components/common/data-table";
-import { Project } from "@/constants/projects.constant";
 import { DashboardCalendar } from "./_components/dashboard-calendar";
 import { DueSoonPanel } from "./_components/due-soon-panel";
 import { PROJECTS } from "@/constants/projects.constant";
 import { TASKS } from "@/constants/tasks.constant";
 import { CURRENT_USER } from "@/constants/users.constant";
 
-const statusStyle: Record<string, string> = {
-  ACTIVE: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
-  PLANNING: "bg-amber-500/10 text-amber-300 border-amber-500/20",
-  ARCHIVED: "bg-muted text-muted-foreground border-border",
-};
-
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
-const columns: ColumnDef<Project>[] = [
+type DashboardRecentProject = {
+  id: string;
+  title: string;
+  joined_at: string;
+  member_profile_image: string[];
+};
+
+const columns: ColumnDef<DashboardRecentProject>[] = [
   {
     header: "Project Name",
-    accessorKey: "name",
+    accessorKey: "title",
     cell: (p) => (
       <Link href={`/projects/${p.id}`} className="hover:text-primary transition-colors font-medium">
-        {p.name}
+        {p.title}
       </Link>
     ),
   },
   {
     header: "Joined Date",
-    accessorKey: "joinedDate",
-    cell: (p) => formatDate(p.joinedDate),
+    accessorKey: "joined_at",
+    cell: (p) => formatDate(p.joined_at),
   },
   {
-    header: "Status",
-    accessorKey: "status",
-    cell: (p) => (
-      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusStyle[p.status]}`}>
-        {p.status}
-      </span>
-    ),
+    header: "Team",
+    accessorKey: "member_profile_image",
+    cell: (p) => {
+      const avatars = p.member_profile_image || [];
+      const showCount = Math.min(avatars.length, 5);
+      const excess = avatars.length - 5;
+      
+      return (
+        <div className="flex -space-x-2">
+          {avatars.slice(0, showCount).map((url, i) => (
+            <div key={i} className="size-6 rounded-full ring-2 ring-background bg-foreground/10 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {url ? <img src={url} alt="member" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-primary/20" />}
+            </div>
+          ))}
+          {excess > 0 && (
+            <div className="size-6 rounded-full ring-2 ring-background bg-foreground/5 flex items-center justify-center text-[9px] font-semibold text-muted-foreground">
+              +{excess}
+            </div>
+          )}
+        </div>
+      );
+    },
   },
   {
     header: "",
@@ -59,11 +75,18 @@ const columns: ColumnDef<Project>[] = [
 ];
 
 export default function DashboardPage() {
-  // Setup default date to 2024-08-08 as in Lovable or use current date
   const [selectedDate, setSelectedDate] = useState("2024-08-08");
   
   const unfinished = TASKS.filter((t) => t.assigneeId === CURRENT_USER.id && t.status !== "DONE");
-  const recent = PROJECTS.slice(0, 4);
+  
+  // Map mock data to the new backend format for now
+  const recent: DashboardRecentProject[] = PROJECTS.slice(0, 4).map((p) => ({
+    id: p.id,
+    title: p.name,
+    joined_at: p.joinedDate,
+    // Provide some fake URLs or empty strings for testing the UI based on member count
+    member_profile_image: p.members.map(() => "")
+  }));
 
   return (
     <div className="p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1800px] mx-auto">
@@ -78,11 +101,11 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <StatCard label="Total Projects" value={PROJECTS.length} sub={`${PROJECTS.filter(p => p.status === "ACTIVE").length} active`} />
+        <StatCard label="Total Projects" value={PROJECTS.length} sub="active memberships" />
         <StatCard
           label="My Unfinished Tasks"
           value={unfinished.length}
-          sub={`${unfinished.filter(t => t.priority === "HIGH").length} high priority`}
+          sub="across all projects"
           accent="warning"
         />
       </section>

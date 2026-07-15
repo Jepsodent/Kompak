@@ -10,11 +10,7 @@ const columns: { status: TaskStatus; label: string; accent: string }[] = [
   { status: "DONE", label: "Done", accent: "bg-emerald-500/100" },
 ];
 
-const prioTone: Record<string, string> = {
-  HIGH: "text-amber-400 bg-amber-500/10 border-amber-500/20",
-  MEDIUM: "text-primary bg-primary/10 border-primary/20",
-  LOW: "text-muted-foreground bg-foreground/5 border-border",
-};
+
 
 export function ProjectBoardTab({ project }: { project: Project }) {
   const tasks = TASKS.filter((t) => t.projectId === project.id);
@@ -42,12 +38,7 @@ export function ProjectBoardTab({ project }: { project: Project }) {
                     className="group p-3 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing"
                   >
                     <p className="text-sm font-medium leading-snug mb-3">{t.title}</p>
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border ${prioTone[t.priority]}`}
-                      >
-                        {t.priority}
-                      </span>
+                    <div className="flex items-center justify-end">
                       {assignee && (
                         <div
                           className={`size-6 rounded-full ${assignee.color} flex items-center justify-center text-[10px] font-semibold`}

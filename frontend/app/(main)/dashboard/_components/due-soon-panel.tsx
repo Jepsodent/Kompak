@@ -4,12 +4,6 @@ import { TASKS } from "@/constants/tasks.constant";
 import { PROJECTS } from "@/constants/projects.constant";
 import { Plus } from "lucide-react";
 
-const priorityLabel: Record<string, { label: string; className: string }> = {
-  HIGH: { label: "High Priority", className: "text-amber-400" },
-  MEDIUM: { label: "Medium", className: "text-muted-foreground" },
-  LOW: { label: "Routine", className: "text-muted-foreground" },
-};
-
 function formatDay(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
@@ -34,7 +28,6 @@ export function DueSoonPanel({ date }: { date: string }) {
         )}
         {items.map((t) => {
           const project = PROJECTS.find((p) => p.id === t.projectId);
-          const prio = priorityLabel[t.priority];
           return (
             <div
               key={t.id}
@@ -45,8 +38,6 @@ export function DueSoonPanel({ date }: { date: string }) {
               </p>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-muted-foreground">{project?.name}</span>
-                <span className="size-1 bg-muted-foreground/30 rounded-full" />
-                <span className={`text-[10px] ${prio.className}`}>{prio.label}</span>
               </div>
             </div>
           );

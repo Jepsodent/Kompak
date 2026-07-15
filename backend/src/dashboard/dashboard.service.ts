@@ -66,10 +66,22 @@ export class DashboardService {
     private async getRecentProjects(userId:string){
         const {data, error}= await this.supabase.client.from('project_members').select('joined_at, projects(id,title)').eq('profile_id',userId).eq('membership_status', 'ACTIVE').order('joined_at', {ascending: false}).limit(5).returns<RecentProjectRow[]>();
         if(error) throw new BadRequestException(error.message)
-        return data.filter((item) => item.projects !== null).map((item) => ({
+        
+        const recentProjects =  data.filter((item) => item.projects !== null)
+        const projectIds =  recentProjects.map((item) => item.projects!.id)
+        if(projectIds.length === 0) return []
+
+        const {data:allMembers, error:memberError} = await this.supabase.client.from('project_members').select('project_id, profiles(profile_image_url)').in('project_id', projectIds).eq('membership_status','ACTIVE')
+        if(memberError) throw new BadRequestException(memberError.message)
+
+
+        return recentProjects.map((item) => ({
             id: item.projects!.id,
             title: item.projects!.title,
-            joined_at: item.joined_at
+            joined_at: item.joined_at,
+            member_profile_image: allMembers.filter((m) => m.project_id === item.projects!.id)
+                                            .map((m) => m.profiles.profile_image_url)
+                                            .filter(Boolean)
         }))
     
 

@@ -41,7 +41,7 @@ export default function ProjectPage() {
         <div className="min-w-0 space-y-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground/70">
-              Project · {project.status}
+              Project
             </p>
             <EditableText
               value={project.name}
