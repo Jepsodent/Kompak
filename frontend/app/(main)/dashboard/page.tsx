@@ -71,6 +71,7 @@ const columns: ColumnDef<DashboardRecentProject>[] = [
 export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0,10));
   const {data, loading ,error} = useDashboard()
+  console.log(data)
   if(loading || !data){
     return <div className="p-12 text-center text-sm text-muted-foreground h-[50vh] flex items-center justify-center">Loading dashboard...</div>;
   }

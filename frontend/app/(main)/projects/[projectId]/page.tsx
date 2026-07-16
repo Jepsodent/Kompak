@@ -20,6 +20,7 @@ export default function ProjectPage() {
 
   const {project ,members,dashboard, isLoading, updateProject} = useProjectDetails(params.projectId);
   // console.log(project)
+  console.log(dashboard)
 
   if (!project) {
     return (
@@ -114,7 +115,7 @@ export default function ProjectPage() {
       </div>
 
       <div className="min-h-[500px]">
-        {tab === "summary" && <ProjectSummaryTab project={project} onUpdate = {updateProject} stats={dashboard?.stats}/>}
+        {tab === "summary" && <ProjectSummaryTab project={project} onUpdate = {updateProject} stats={dashboard?.stats} quickLinks={dashboard?.quick_links || []}/>}
         {/* {tab === "board" && <ProjectBoardTab project={project} />} */}
         {/* {tab === "list" && <ProjectListTab project={project} members={members} />} */}
       </div>

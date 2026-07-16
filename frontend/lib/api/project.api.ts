@@ -36,6 +36,8 @@ export const ProjectService = {
         const { data } = await axiosClient.delete(`/projects/${id}`);
         return data.data;
     },
+    
+
 
     generateInvitation: async(projectId:string): Promise<string>  => {
         const { data } = await axiosClient.post(`/projects/${projectId}/invitations`);
@@ -45,6 +47,10 @@ export const ProjectService = {
         const { data } = await axiosClient.post(`/projects/join`, { token });
         return data.data;
     },
+
+
+
+
     getProjectMembers: async(projectId:string):Promise<ProjectMember[]>=> {
         const { data } = await axiosClient.get(`/projects/${projectId}/members`);
         return data.data;

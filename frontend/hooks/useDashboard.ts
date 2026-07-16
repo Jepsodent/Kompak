@@ -1,4 +1,4 @@
-import { DashboardService } from "@/lib/services/dashboard.service"
+import { DashboardService } from "@/lib/api/dashboard.api"
 import { DashboardData } from "@/types/dashboard.type"
 import { useEffect, useState } from "react"
 
@@ -12,7 +12,7 @@ export function useDashboard(){
         const fetchDashboard = async() => {
             try {
                 const res =  await DashboardService.getStats()
-                setData(res.data)
+                setData(res)
             } catch (error) {
                 console.error('Failed to fetch dashboard stats', error)
                 setError("Failed to fetch dashboard stats")

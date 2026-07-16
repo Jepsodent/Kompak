@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import type { QuickLink } from "@/constants/projects.constant";
 import { EditableText } from "@/components/common/editable-text";
 import { toast } from "sonner";
-import { DashboardStats, Project } from "@/types/project.type";
+import { DashboardStats, Project, QuickLink } from "@/types/project.type";
+import { useQuickLinks } from "@/hooks/useQuickLinks";
+import { QuickLinkDialog } from "./quick-link-dialog";
 
-export function ProjectSummaryTab({ project , onUpdate, stats} : { project: Project, onUpdate: (data: { title?: string; background?:string; objective?: string; method?: string; expected_result?: string }) => void, stats?: DashboardStats}) {
+export function ProjectSummaryTab({ project , onUpdate, stats, quickLinks} : { project: Project, onUpdate: (data: { title?: string; background?:string; objective?: string; method?: string; expected_result?: string }) => void, stats?: DashboardStats, quickLinks: QuickLink[]}) {
   // console.log(stats)
   const total = stats?.total_tasks || 0;
   const completion = stats?.completion_rate || 0;
@@ -16,41 +17,26 @@ export function ProjectSummaryTab({ project , onUpdate, stats} : { project: Proj
   const review = stats?.task_distribution?.IN_REVIEW || 0; 
   const done = stats?.task_distribution?.DONE || 0;
 
-  const [links, setLinks] = useState<QuickLink[]>([]);
-
-  function addLink() {
-    const title = window.prompt("Link title?");
-    if (!title) return;
-    setLinks((l) => [
-      {
-        id: `l-${Date.now()}`,
-        title,
-        url: "#",
-        addedBy: "You",
-        updatedAt: "just now",
-        action: "added",
-      },
-      ...l,
-    ]);
-    toast.success("Link added");
+  const {addLink, editLink, deleteLink, isPending} = useQuickLinks(project.id)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editData, setEditData] = useState<{id:string; title:string; url:string} | null>(null)
+  function handleAddClick(){
+    setEditData(null);
+    setDialogOpen(true)
   }
-
-  function editLink(id: string) {
-    const link = links.find((l) => l.id === id);
-    if (!link) return;
-    const title = window.prompt("Edit title", link.title);
-    if (!title) return;
-    setLinks((ls) =>
-      ls.map((l) =>
-        l.id === id ? { ...l, title, updatedAt: "just now", addedBy: "You", action: "updated" } : l
-      )
-    );
-    toast.success("Link updated");
+  function handleEditClick(id:string, title:string, url:string){
+    setEditData({id,title, url})
+    setDialogOpen(true)
   }
-
-  function deleteLink(id: string) {
-    setLinks((ls) => ls.filter((l) => l.id !== id));
-    toast.success("Link removed");
+  async function handleSaveDialog(data: {title:string, url:string}){
+    if(editData){
+      await editLink({id:editData.id, ...data})
+    }else{
+      await addLink(data)
+    }
+  }
+  function handleDelete(id:string){
+    deleteLink(id)
   }
 
   return (
@@ -116,19 +102,19 @@ export function ProjectSummaryTab({ project , onUpdate, stats} : { project: Proj
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <h4 className="text-sm font-semibold">Quick Links</h4>
             <button
-              onClick={addLink}
+              onClick={handleAddClick}
               className="text-[11px] font-medium text-primary hover:underline inline-flex items-center gap-1"
             >
               <Plus className="size-3" /> Add
             </button>
           </div>
           <div className="p-2">
-            {links.length === 0 && (
+            {quickLinks.length === 0 && (
               <div className="p-6 text-center text-xs text-muted-foreground">
                 No links yet. Add one to keep resources together.
               </div>
             )}
-            {links.map((l) => (
+            {quickLinks.map((l) => (
               <div
                 key={l.id}
                 className="group flex items-start justify-between p-3 rounded-lg hover:bg-background/60 transition-colors"
@@ -138,19 +124,22 @@ export function ProjectSummaryTab({ project , onUpdate, stats} : { project: Proj
                     {l.title}
                   </a>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {l.action === "added" ? "Added by" : "Last updated by"} {l.addedBy} · {l.updatedAt}
+                    {l.updated_at === null ? "Added by" : "Last updated by"}{" "}
+                    {l.updated_at === null 
+                      ? l.creator?.profiles?.name 
+                      : l.updater?.profiles?.name || l.creator?.profiles?.name}
                   </p>
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                   <button
-                    onClick={() => editLink(l.id)}
+                    onClick={() => handleEditClick(l.id, l.title, l.url)}
                     className="size-6 flex items-center justify-center rounded hover:bg-foreground/5 text-muted-foreground hover:text-foreground"
                     aria-label="Edit link"
                   >
                     <Pencil className="size-3" />
                   </button>
                   <button
-                    onClick={() => deleteLink(l.id)}
+                    onClick={() => handleDelete(l.id)}
                     className="size-6 flex items-center justify-center rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                     aria-label="Delete link"
                   >
@@ -162,6 +151,13 @@ export function ProjectSummaryTab({ project , onUpdate, stats} : { project: Proj
           </div>
         </div>
       </div>
+      <QuickLinkDialog 
+        open={dialogOpen}
+        onOpenChange= {setDialogOpen}
+        isLoading= {isPending}
+        onSave={handleSaveDialog}
+        initialData={editData}
+      />
     </div>
   );
 }

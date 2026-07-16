@@ -171,7 +171,8 @@ export class ProjectsService {
             ...dto,
             created_by_member_id: member.id ,
             project_id: projectId,
-        }).select().single()
+        }).select('*, project_members!created_by_member_id(profiles(name))').single()
+
 
         if(!data || error){
             throw new BadRequestException(error?.message ?? 'Failed to create link')
@@ -192,7 +193,7 @@ export class ProjectsService {
             ...dto,
             updated_by_member_id: member.id,
             updated_at: new Date().toISOString(),
-        }).eq('id',quickLinkId).eq('project_id',projectId).select().single()
+        }).eq('id',quickLinkId).eq('project_id',projectId).select('*, project_members!created_by_member_id(profiles(name))').single()
 
         if(!data || error){
             throw new BadRequestException(error?.message ?? 'Failed to update link')
@@ -264,11 +265,20 @@ export class ProjectsService {
             task_distribution: taskDistribution
         }
     }
+    
     private async getQuickLinks(projectId:string){
-        const {data, error} = await this.supabase.client.from('quick_links').select('*').eq('project_id',projectId)
+        const {data, error} = await this.supabase.client.from('quick_links')
+            .select(`
+                *,
+                creator:project_members!created_by_member_id(profiles(name, profile_image_url)),
+                updater:project_members!updated_by_member_id(profiles(name, profile_image_url))
+            `)
+            .eq('project_id', projectId)
+            
         if(error) throw new BadRequestException(error.message)
         return data
     }
+
 
     private async getMembers(projectId:string){
         const {data, error} = await this.supabase.client.from('project_members').select('*, profiles(name, profile_image_url, email)').eq('project_id',projectId).eq('membership_status','ACTIVE')

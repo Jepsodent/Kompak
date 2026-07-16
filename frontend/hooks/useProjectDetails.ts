@@ -1,5 +1,4 @@
-import { ProjectService } from "@/lib/services/project.service";
-import { Project, ProjectMember } from "@/types/project.type";
+import { ProjectService } from "@/lib/api/project.api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";

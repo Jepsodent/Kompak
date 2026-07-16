@@ -1,4 +1,4 @@
-import { ProjectService } from "@/lib/services/project.service";
+import { ProjectService } from "@/lib/api/project.api";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";

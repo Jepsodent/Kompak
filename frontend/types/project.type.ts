@@ -38,16 +38,30 @@ export interface DashboardStats {
   completion_rate: number;
   task_distribution: TaskDistribution;
 }
-export interface QuickLink{
-    created_at: string;
-    created_by_member_id: string | null;
+export interface QuickLink {
     id: string;
     project_id: string;
     title: string;
+    url: string;
+    created_at: string;
+    created_by_member_id: string;
     updated_at: string | null;
     updated_by_member_id: string | null;
-    url: string;
+    
+    creator?: {
+        profiles: {
+            name: string;
+            profile_image_url?: string | null;
+        };
+    } | null;
+    updater?: {
+        profiles: {
+            name: string;
+            profile_image_url?: string | null;
+        };
+    } | null;
 }
+
 // Boleh tambahin ini juga buat respon dashboard utuh
 export interface ProjectDashboardResponse {
   stats: DashboardStats;

@@ -36,7 +36,7 @@ export async function updateSession(request: NextRequest) {
   const currentPath = request.nextUrl.pathname;
 
   // Route Guard 1: Unauthenticated users trying to access protected pages
-  if (!user && currentPath.startsWith("/dashboard")) {
+  if (!user && (currentPath.startsWith("/dashboard") || currentPath.startsWith('/projects'))) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/auth/quick-login";
     return NextResponse.redirect(loginUrl);
