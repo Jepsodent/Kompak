@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { DashboardStats, Project, QuickLink } from "@/types/project.type";
 import { useQuickLinks } from "@/hooks/useQuickLinks";
 import { QuickLinkDialog } from "./quick-link-dialog";
+import { DeleteProjectDialog } from "./delete-project-dialog";
 
 export function ProjectSummaryTab({ project , onUpdate, stats, quickLinks} : { project: Project, onUpdate: (data: { title?: string; background?:string; objective?: string; method?: string; expected_result?: string }) => void, stats?: DashboardStats, quickLinks: QuickLink[]}) {
   // console.log(stats)
@@ -17,6 +18,7 @@ export function ProjectSummaryTab({ project , onUpdate, stats, quickLinks} : { p
   const review = stats?.task_distribution?.IN_REVIEW || 0; 
   const done = stats?.task_distribution?.DONE || 0;
 
+  // links 
   const {addLink, editLink, deleteLink, isPending} = useQuickLinks(project.id)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editData, setEditData] = useState<{id:string; title:string; url:string} | null>(null)
@@ -38,6 +40,9 @@ export function ProjectSummaryTab({ project , onUpdate, stats, quickLinks} : { p
   function handleDelete(id:string){
     deleteLink(id)
   }
+
+  //delete
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in">
@@ -157,6 +162,31 @@ export function ProjectSummaryTab({ project , onUpdate, stats, quickLinks} : { p
         isLoading= {isPending}
         onSave={handleSaveDialog}
         initialData={editData}
+      />
+        {/* Danger Zone (Lebarnya full dari kiri ke kanan grid) */}
+      <div className="col-span-1 lg:col-span-12 mt-6">
+        <div className="border border-destructive/20 rounded-2xl p-6 bg-destructive/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-semibold text-destructive">Danger Zone</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Permanently delete this project and all of its data. This action is irreversible.
+            </p>
+          </div>
+          <button 
+            onClick={() => setDeleteOpen(true)}
+            className="shrink-0 px-4 py-2 bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs font-semibold rounded-lg transition-colors"
+          >
+            Delete Project
+          </button>
+        </div>
+      </div>
+
+      {/* Render Modalnya (Taruh di mana aja di bawah sini) */}
+      <DeleteProjectDialog
+        open={deleteOpen} 
+        onOpenChange={setDeleteOpen} 
+        projectId={project.id} 
+        projectTitle={project.title} 
       />
     </div>
   );

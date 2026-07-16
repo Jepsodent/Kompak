@@ -72,10 +72,12 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0,10));
   const {data, loading ,error} = useDashboard()
   console.log(data)
+  if(error){
+    return <div className="p-12 text-center text-sm text-red-500 h-[50vh] flex items-center justify-center">{error}</div>; 
+  }
   if(loading || !data){
     return <div className="p-12 text-center text-sm text-muted-foreground h-[50vh] flex items-center justify-center">Loading dashboard...</div>;
   }
-
   return (
     <div className="p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1800px] mx-auto">
       <div>

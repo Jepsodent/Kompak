@@ -20,7 +20,7 @@ export default function ProjectPage() {
 
   const {project ,members,dashboard, isLoading, updateProject} = useProjectDetails(params.projectId);
   // console.log(project)
-  console.log(dashboard)
+  // console.log(dashboard)
 
   if (!project) {
     return (
