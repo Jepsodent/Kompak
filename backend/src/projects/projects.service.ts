@@ -103,13 +103,13 @@ export class ProjectsService {
         return data;
     }
 
-    // get all members whtever the status is (active , left , removed)
+    // get all members whtever the status is (active)
     async getAllMember(projectId:string){
         const {data:project,  error:projectError} = await this.supabase.client.from('projects').select().eq('id',projectId).single()
         if(projectError || !project){
             throw new NotFoundException('Project not found')
         }
-        const {data, error} = await this.supabase.client.from('project_members').select('*, profiles(name,email,profile_image_url)').eq('project_id',projectId)
+        const {data, error} = await this.supabase.client.from('project_members').select('*, profiles(name,email,profile_image_url)').eq('project_id',projectId).eq('membership_status','ACTIVE')
         if(error) throw new BadRequestException(error.message)
         return data;
     }
