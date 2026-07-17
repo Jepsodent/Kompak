@@ -16,7 +16,7 @@ import { CheckCircle2, CircleX } from "lucide-react";
 import { useState, useTransition } from "react";
 import { registerUserAction } from "../../actions";
 import { Spinner } from "@/components/ui/spinner";
-import { RegisterFormValues, registerSchema } from "@/schemas/auth";
+import { RegisterFormValues, registerSchema } from "@/schemas/auth.schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {

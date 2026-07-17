@@ -38,7 +38,8 @@ export async function updateSession(request: NextRequest) {
   // Route Guard 1: Unauthenticated users trying to access protected pages
   if (
     !user &&
-    (currentPath.startsWith("/app") || currentPath.startsWith("/settings"))
+    (currentPath.startsWith("/dashboard") ||
+      currentPath.startsWith("/settings"))
   ) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/quick-login";
@@ -49,7 +50,7 @@ export async function updateSession(request: NextRequest) {
   const publicAuthPages = ["/login", "/register", "/quick-login"];
   if (user && publicAuthPages.includes(currentPath)) {
     const appUrl = request.nextUrl.clone();
-    appUrl.pathname = "/app";
+    appUrl.pathname = "/dashboard";
     return NextResponse.redirect(appUrl);
   }
 

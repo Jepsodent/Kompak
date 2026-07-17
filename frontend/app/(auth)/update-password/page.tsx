@@ -19,7 +19,10 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/components/ui/spinner";
 import { useForm } from "react-hook-form";
-import { UpdatePasswordFormValues, updatePasswordSchema } from "@/schemas/auth";
+import {
+  UpdatePasswordFormValues,
+  updatePasswordSchema,
+} from "@/schemas/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,

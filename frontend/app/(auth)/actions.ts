@@ -1,6 +1,8 @@
 "use server";
 
 import {
+  ChangeEmailFormValues,
+  changeEmailSchema,
   LoginFormValues,
   loginSchema,
   MagicLinkFormValues,
@@ -9,8 +11,8 @@ import {
   registerSchema,
   UpdatePasswordFormValues,
   updatePasswordSchema,
-} from "@/schemas/auth";
-import { StatusMessage } from "@/types/auth";
+} from "@/schemas/auth.schema";
+import { StatusMessage } from "@/types/auth.type";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -41,7 +43,7 @@ export async function loginWithEmail(
     return { type: "error", text: error.message };
   }
 
-  redirect("/app/overview");
+  redirect("/dashboard");
 }
 
 export async function loginWithMagicLink(
@@ -83,7 +85,7 @@ export async function loginWithProvider(
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/app/overview`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/dashboard`,
     },
   });
   if (error) {
@@ -207,4 +209,46 @@ export async function logOut() {
   await supabase.auth.signOut();
 
   redirect("/quick-login");
+}
+
+export async function changeUserEmail(
+  data: ChangeEmailFormValues,
+): Promise<StatusMessage> {
+  const result = changeEmailSchema.safeParse(data);
+  if (!result.success) {
+    return {
+      type: "error",
+      text: "Parsing failed because of invalid form data.",
+    };
+  }
+
+  const { newEmail, password } = result.data;
+
+  const supabase = await createClient();
+  const { data: authData, error: authError } =
+    await supabase.auth.signInWithPassword({
+      email: (await supabase.auth.getUser()).data.user?.email || "",
+      password,
+    });
+  if (authError) {
+    return {
+      type: "error",
+      text: "Authentication failed: Incorrect password.",
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser(
+    { email: newEmail },
+    {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback?next=/settings/profile`,
+    },
+  );
+  if (error) {
+    return { type: "error", text: error.message };
+  }
+
+  return {
+    type: "success",
+    text: "Confirmation links sent! Please check both your old and new email addresses to verify the change.",
+  };
 }

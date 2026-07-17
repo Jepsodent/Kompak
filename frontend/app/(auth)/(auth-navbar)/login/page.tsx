@@ -12,14 +12,13 @@ import {
 } from "@/components/ui/card";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { StatusMessage } from "@/types/auth";
 import { CheckCircle2, CircleX } from "lucide-react";
 import { useState, useTransition } from "react";
 import { loginWithEmail } from "../../actions";
 import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { LoginFormValues, loginSchema } from "@/schemas/auth";
+import { LoginFormValues, loginSchema } from "@/schemas/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,

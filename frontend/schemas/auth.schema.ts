@@ -66,3 +66,12 @@ export const updatePasswordSchema = z
     path: ["passwordConfirmation"],
   });
 export type UpdatePasswordFormValues = z.infer<typeof updatePasswordSchema>;
+
+export const changeEmailSchema = z.object({
+  newEmail: z
+    .string()
+    .min(1, "Email is required.")
+    .email("Invalid email format."),
+  password: z.string().min(1, "Password is required to confirm identity."),
+});
+export type ChangeEmailFormValues = z.infer<typeof changeEmailSchema>;

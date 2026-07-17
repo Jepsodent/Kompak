@@ -10,16 +10,22 @@ import { DashboardRecentProject } from "@/types/dashboard.type";
 import { useDashboard } from "@/hooks/useDashboard";
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
-
 
 const columns: ColumnDef<DashboardRecentProject>[] = [
   {
     header: "Project Name",
     accessorKey: "title",
     cell: (p) => (
-      <Link href={`/projects/${p.id}`} className="hover:text-primary transition-colors font-medium">
+      <Link
+        href={`/projects/${p.id}`}
+        className="hover:text-primary transition-colors font-medium"
+      >
         {p.title}
       </Link>
     ),
@@ -36,13 +42,24 @@ const columns: ColumnDef<DashboardRecentProject>[] = [
       const avatars = p.member_profile_image || [];
       const showCount = Math.min(avatars.length, 5);
       const excess = avatars.length - 5;
-      
+
       return (
         <div className="flex -space-x-2">
           {avatars.slice(0, showCount).map((url, i) => (
-            <div key={i} className="size-6 rounded-full ring-2 ring-background bg-foreground/10 overflow-hidden">
+            <div
+              key={i}
+              className="size-6 rounded-full ring-2 ring-background bg-foreground/10 overflow-hidden"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              {url ? <img src={url} alt="member" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-primary/20" />}
+              {url ? (
+                <img
+                  src={url}
+                  alt="member"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-primary/20" />
+              )}
             </div>
           ))}
           {excess > 0 && (
@@ -69,14 +86,26 @@ const columns: ColumnDef<DashboardRecentProject>[] = [
 ];
 
 export default function DashboardPage() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0,10));
-  const {data, loading ,error} = useDashboard()
-  console.log(data)
-  if(error){
-    return <div className="p-12 text-center text-sm text-red-500 h-[50vh] flex items-center justify-center">{error}</div>; 
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
+  const { data, loading, error } = useDashboard();
+  console.log(data);
+
+
+  if (error) {
+    return (
+      <div className="p-12 text-center text-sm text-red-500 h-[50vh] flex items-center justify-center">
+        {error}
+      </div>
+    );
   }
-  if(loading || !data){
-    return <div className="p-12 text-center text-sm text-muted-foreground h-[50vh] flex items-center justify-center">Loading dashboard...</div>;
+  if (loading || !data) {
+    return (
+      <div className="p-12 text-center text-sm text-muted-foreground h-[50vh] flex items-center justify-center">
+        Loading dashboard...
+      </div>
+    );
   }
   return (
     <div className="p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1800px] mx-auto">
@@ -91,7 +120,11 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <StatCard label="Total Projects" value={data.total_projects} sub="active memberships" />
+        <StatCard
+          label="Total Projects"
+          value={data.total_projects}
+          sub="active memberships"
+        />
         <StatCard
           label="My Unfinished Tasks"
           value={data.my_total_tasks}
@@ -103,7 +136,10 @@ export default function DashboardPage() {
       {/* Middle */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <DashboardCalendar selectedDate={selectedDate} onSelect={setSelectedDate} />
+          <DashboardCalendar
+            selectedDate={selectedDate}
+            onSelect={setSelectedDate}
+          />
         </div>
         <div>
           <DueSoonPanel date={selectedDate} tasks={data.tasks_due_soon} />
@@ -116,7 +152,11 @@ export default function DashboardPage() {
           <h4 className="text-sm font-semibold">Recent Projects</h4>
         </div>
         <div className="min-w-[600px] overflow-hidden group">
-          <DataTable columns={columns} data={data.recent_projects} className="border-0 shadow-none rounded-none bg-transparent" />
+          <DataTable
+            columns={columns}
+            data={data.recent_projects}
+            className="border-0 shadow-none rounded-none bg-transparent"
+          />
         </div>
       </section>
     </div>
@@ -137,7 +177,9 @@ function StatCard({
   return (
     <div className="bg-card p-6 rounded-2xl ring-1 ring-white/10 shadow-sm">
       <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
-      <h3 className="text-4xl md:text-5xl font-display font-bold tracking-tight">{value}</h3>
+      <h3 className="text-4xl md:text-5xl font-display font-bold tracking-tight">
+        {value}
+      </h3>
       <p
         className={`text-[10px] mt-2 font-medium ${
           accent === "success" ? "text-emerald-400" : "text-amber-400"

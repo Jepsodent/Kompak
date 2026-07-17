@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -15,10 +14,9 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, CircleX } from "lucide-react";
-import { StatusMessage } from "@/types/auth";
 import { loginWithMagicLink, loginWithProvider } from "../../actions";
 import { Icons } from "@/components/ui/icons";
-import { MagicLinkFormValues, magicLinkSchema } from "@/schemas/auth";
+import { MagicLinkFormValues, magicLinkSchema } from "@/schemas/auth.schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -29,7 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FieldItem } from "@base-ui/react";
+import { StatusMessage } from "@/types/auth.type";
 
 export default function QuickLoginPage() {
   const [isPending, startTransition] = useTransition();

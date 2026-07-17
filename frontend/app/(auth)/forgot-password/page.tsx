@@ -18,7 +18,7 @@ import Link from "next/link";
 import { sendPasswordResetLink } from "../actions";
 import { Spinner } from "@/components/ui/spinner";
 import { useForm } from "react-hook-form";
-import { MagicLinkFormValues, magicLinkSchema } from "@/schemas/auth";
+import { MagicLinkFormValues, magicLinkSchema } from "@/schemas/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
