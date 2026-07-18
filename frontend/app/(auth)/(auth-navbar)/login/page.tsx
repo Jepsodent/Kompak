@@ -10,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { CheckCircle2, CircleX } from "lucide-react";
 import { useState, useTransition } from "react";
@@ -29,6 +28,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { StatusMessage } from "@/types/auth.type";
 
 export default function LoginPage() {
   const [isPending, startTransition] = useTransition();

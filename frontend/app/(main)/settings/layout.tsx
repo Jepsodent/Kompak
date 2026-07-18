@@ -31,8 +31,8 @@ export default function AppNavbarLayout({
         </p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 md:gap-8">
-        <nav className="flex md:flex-col gap-2">
+      <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
+        <nav className="flex lg:flex-col gap-2">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
 

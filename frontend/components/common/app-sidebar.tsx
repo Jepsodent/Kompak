@@ -1,24 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Plus, ChevronDown, X, Folder } from "lucide-react";
-import { CURRENT_USER } from "@/constants/users.constant";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Plus,
+  ChevronDown,
+  X,
+  Folder,
+  UserPen,
+  Settings,
+  Palette,
+  LogOutIcon,
+} from "lucide-react";
 import { MAIN_NAV } from "@/constants/sidebar.constant";
 import { useUIStore } from "@/lib/stores/navbar.store";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn, getColor } from "@/lib/utils";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useCreateProject } from "@/hooks/useCreateProject";
 import { useProfile } from "@/hooks/useProfile";
+import { Button } from "../ui/button";
+import { logOut } from "@/app/(auth)/actions";
+import { Skeleton } from "../ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { data } = useDashboard();
   const { handleCreateProject, isCreating } = useCreateProject();
 
@@ -28,6 +44,24 @@ export function AppSidebar() {
     console.log("Profile: " + profile?.name);
     console.log("Error: " + profileError);
   }
+
+  const dropdownItems = [
+    {
+      name: "Profile",
+      href: "/settings/profile",
+      icon: UserPen,
+    },
+    {
+      name: "Account",
+      href: "/settings/account",
+      icon: Settings,
+    },
+    {
+      name: "Appearance",
+      href: "/settings/appearance",
+      icon: Palette,
+    },
+  ];
 
   const projects = data?.recent_projects || [];
   const { sidebarOpen, setSidebarOpen } = useUIStore();
@@ -172,54 +206,68 @@ export function AppSidebar() {
           </div>
         </div>
 
-        {/* User Profile Footer */}
+        {/* FOOTER: USER PROFILE */}
         <div className="mt-auto p-4 border-t border-border">
           {isLoading ? (
-            /* Loading Skeleton State */
-            <div className="flex items-center gap-3 px-2 animate-pulse">
-              <div className="size-9 rounded-full bg-muted" />
-              <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                <div className="h-3 w-24 bg-muted rounded" />
-                <div className="h-2.5 w-16 bg-muted/60 rounded" />
+            // Loading State
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
               </div>
             </div>
           ) : profileError || !profile ? (
-            /* Error or Empty Fallback State */
-            <div className="text-[11px] text-destructive px-2 truncate">
+            // Finished Loading, but Error State
+            <div className="text-sm text-destructive">
               Failed to load profile
             </div>
           ) : (
-            /* Live Dynamic Profile State */
-            <div className="flex items-center gap-3 px-2">
-              {profile.profile_image_url ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={profile.profile_image_url}
-                  alt={`${profile.name}'s avatar`}
-                  className="size-9 rounded-full object-cover ring-1 ring-border"
-                />
-              ) : (
-                /* Text Initials Fallback if no avatar image exists */
-                <div className="size-9 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-xs font-semibold text-primary outline-1 -outline-offset-1 outline-white/10">
-                  {profile.name
-                    ? profile.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .substring(0, 2)
-                        .toUpperCase()
-                    : "U"}
+            /* Profile Exist State */
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <div className="w-full px-4 py-2 border rounded-md flex items-center gap-3 cursor-pointer hover:bg-foreground/5 hover:text-foreground transition-all duration-300">
+                  <Avatar>
+                    <AvatarImage src={profile?.profile_image_url} />
+                    <AvatarFallback>PP</AvatarFallback>
+                  </Avatar>
+
+                  <div className="space-y-2">
+                    <span className="text-sm font-semibold">
+                      {profile?.name}
+                    </span>
+                    <span className="text-xs">{profile?.email}</span>
+                  </div>
                 </div>
-              )}
-              <div className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold truncate text-foreground">
-                  {profile.name || "User"}
-                </span>
-                <span className="text-[10px] text-muted-foreground truncate">
-                  Pro Plan
-                </span>
-              </div>
-            </div>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>Settings</DropdownMenuLabel>
+                  {dropdownItems.map((item) => (
+                    <DropdownMenuItem
+                      key={item.href}
+                      className="flex gap-2 items-center cursor-pointer"
+                      onClick={() => router.push(item.href)}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span className="text-sm">{item.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuGroup>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  variant="destructive"
+                  className="flex gap-2 items-center cursor-pointer"
+                  onClick={() => logOut()}
+                >
+                  <LogOutIcon />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </aside>

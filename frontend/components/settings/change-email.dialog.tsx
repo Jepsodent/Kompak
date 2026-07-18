@@ -73,7 +73,7 @@ export default function ChangeEmailDialog() {
       }
     >
       {/* Trigger button visible on the main settings view */}
-      <DialogTrigger asChild>
+      <DialogTrigger>
         <Button variant="secondary" className="cursor-pointer">
           Change Email Address
         </Button>
@@ -149,7 +149,7 @@ export default function ChangeEmailDialog() {
             )}
 
             <DialogFooter className="gap-2 sm:gap-0 pt-2">
-              <DialogClose asChild>
+              <DialogClose>
                 <Button
                   type="button"
                   variant="outline"
