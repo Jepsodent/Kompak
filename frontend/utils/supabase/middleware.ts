@@ -36,22 +36,22 @@ export async function updateSession(request: NextRequest) {
   const currentPath = request.nextUrl.pathname;
 
   // Route Guard 1: Unauthenticated users trying to access protected pages
-  if (!user && currentPath.startsWith("/dashboard")) {
+  if (
+    !user &&
+    (currentPath.startsWith("/dashboard") ||
+      currentPath.startsWith("/settings"))
+  ) {
     const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/auth/quick-login";
+    loginUrl.pathname = "/quick-login";
     return NextResponse.redirect(loginUrl);
   }
 
   // Route Guard 2: Authenticated users trying to access entry forms
-  const publicAuthPages = [
-    "/auth/login",
-    "/auth/register",
-    "/auth/quick-login",
-  ];
+  const publicAuthPages = ["/login", "/register", "/quick-login"];
   if (user && publicAuthPages.includes(currentPath)) {
-    const dashboardUrl = request.nextUrl.clone();
-    dashboardUrl.pathname = "/dashboard";
-    return NextResponse.redirect(dashboardUrl);
+    const appUrl = request.nextUrl.clone();
+    appUrl.pathname = "/dashboard";
+    return NextResponse.redirect(appUrl);
   }
 
   return supabaseResponse;
