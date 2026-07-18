@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Plus, ChevronDown, X, Folder } from "lucide-react";
-import { useState } from "react";
 import { CURRENT_USER } from "@/constants/users.constant";
 import { MAIN_NAV } from "@/constants/sidebar.constant";
 import { useUIStore } from "@/lib/stores/navbar.store";
@@ -13,13 +12,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn, getProjectColor } from "@/lib/utils";
+import { cn, getColor } from "@/lib/utils";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useCreateProject } from "@/hooks/useCreateProject";
 import { useProfile } from "@/hooks/useProfile";
 
 export function AppSidebar() {
-  const [createOpen, setCreateOpen] = useState(false);
   const pathname = usePathname();
   const { data } = useDashboard();
   const { handleCreateProject, isCreating } = useCreateProject();
@@ -119,7 +117,7 @@ export function AppSidebar() {
                   }`}
                 >
                   <span
-                    className={`size-2 rounded-full ring-4 shrink-0 ${getProjectColor(p.id)}`}
+                    className={`size-2 rounded-full ring-4 shrink-0 ${getColor(p.id)}`}
                   />
                   <span className="truncate">{p.title}</span>
                 </Link>
@@ -162,7 +160,7 @@ export function AppSidebar() {
                         className="flex items-center gap-2"
                       >
                         <span
-                          className={`size-2 rounded-full ring-2 ${getProjectColor(p.id)}`}
+                          className={`size-2 rounded-full ring-2 ${getColor(p.id)}`}
                         />
                         <span className="truncate">{p.title}</span>
                       </Link>

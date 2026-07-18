@@ -22,6 +22,9 @@ export default function ProjectPage() {
   // console.log(project)
   // console.log(dashboard)
 
+  if(isLoading){
+    return <div className="p-12 text-center text-muted-foreground h-[calc(100vh-64px)] flex items-center justify-center">Loading project...</div>;
+  }
   if (!project) {
     return (
       <div className="p-12 text-center h-[calc(100vh-64px)] flex flex-col items-center justify-center">
@@ -29,9 +32,6 @@ export default function ProjectPage() {
         <p className="text-sm text-muted-foreground mt-2">It may have been archived or renamed.</p>
       </div>
     );
-  }
-  if(isLoading){
-    return <div className="p-12 text-center text-muted-foreground h-[calc(100vh-64px)] flex items-center justify-center">Loading project...</div>;
   }
 
   const handleSaveName = (newName: string) => {
@@ -117,10 +117,10 @@ export default function ProjectPage() {
       <div className="min-h-[500px]">
         {tab === "summary" && <ProjectSummaryTab project={project} onUpdate = {updateProject} stats={dashboard?.stats} quickLinks={dashboard?.quick_links || []}/>}
         {/* {tab === "board" && <ProjectBoardTab project={project} />} */}
-        {/* {tab === "list" && <ProjectListTab project={project} members={members} />} */}
+        {tab === "list" && <ProjectListTab project={project} members={members} />}
       </div>
 
-      <ShareDialog open={shareOpen} onOpenChange={setShareOpen} projectName={project.title} />
+      <ShareDialog open={shareOpen} onOpenChange={setShareOpen} projectName={project.title} projectId={project.id} />
     </div>
   );
 }

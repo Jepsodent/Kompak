@@ -12,9 +12,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import { DataTable, type ColumnDef } from "@/components/common/data-table";
 import { Project, ProjectMember } from "@/types/project.type";
+import { getColor, getInitials } from "@/lib/utils";
+import { useMember } from "@/hooks/useMember";
 
 const statusTone: Record<string, string> = {
   TODO: "bg-muted text-muted-foreground",
@@ -28,20 +29,23 @@ function formatDay(iso: string) {
 }
 
 export function ProjectListTab({ project, members }: { project: Project, members: ProjectMember[] }) {
-  const canManage = project.members.some(
+  // console.log(members)
+  const {kickMember, updateRole} = useMember(project.id)
+
+  const canManage = members.some(
     (m) => m.id === CURRENT_USER.id && m.role === "LEADER"
   );
-  const [initialMember, setMembers] = useState(project.members);
+
+
+  // nanti di integrasiin kalo udah ada endpointnya
   const tasks = TASKS.filter((t) => t.projectId === project.id);
 
-  function changeRole(id: string, role: Role) {
-    setMembers((ms) => ms.map((m) => (m.id === id ? { ...m, role } : m)));
-    toast.success("Role updated");
+  function changeRole(profileId: string, role: "LEADER" | "MEMBER") {
+    updateRole({memberId: profileId, role})
   }
 
-  function removeMember(id: string) {
-    setMembers((ms) => ms.filter((m) => m.id !== id));
-    toast.success("Member removed");
+  function removeMember(profileId: string) {
+    kickMember(profileId)
   }
 
   // Instead of HTML table, we use DataTable for tasks!
@@ -64,14 +68,22 @@ export function ProjectListTab({ project, members }: { project: Project, members
       header: "Assignee",
       accessorKey: "assigneeId",
       cell: (t) => {
-        const a = project.members.find((m) => m.id === t.assigneeId);
+        const a = members.find((m) => m.id === t.assigneeId);
         if (!a) return <span className="text-xs text-muted-foreground">—</span>;
         return (
           <div className="flex items-center gap-2">
-            <div className={`size-6 rounded-full ${a.color} flex items-center justify-center text-[10px] font-semibold`}>
-              {a.initials}
+            <div className={`size-6 rounded-full ${getColor(a.id)} flex items-center justify-center text-[10px] font-semibold overflow-hidden shrink-0`}>
+              {a.profiles.profile_image_url ? (
+                  <img 
+                    src={a.profiles.profile_image_url} 
+                    alt={a.profiles.name} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  getInitials(a.profiles.name)
+                )}
             </div>
-            <span className="text-xs text-muted-foreground">{a.name}</span>
+            <span className="text-xs text-muted-foreground">{a.profiles.name}</span>
           </div>
         );
       },
@@ -99,13 +111,21 @@ export function ProjectListTab({ project, members }: { project: Project, members
           {members.map((m) => (
             <div key={m.id} className="px-6 py-3 flex items-center gap-4">
               <div
-                className={`size-9 rounded-full ${m.color} flex items-center justify-center text-xs font-semibold shrink-0`}
+                className={`size-9 rounded-full ${getColor(m.id)} flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden`}
               >
-                {m.initials}
+                {m.profiles.profile_image_url ? (
+                  <img 
+                    src={m.profiles.profile_image_url} 
+                    alt={m.profiles.name} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  getInitials(m.profiles.name)
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
-                  {m.name}
+                  {m.profiles.name}
                   {m.id === CURRENT_USER.id && (
                     <span className="ml-2 text-[10px] text-muted-foreground">(you)</span>
                   )}
