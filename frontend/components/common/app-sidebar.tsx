@@ -177,27 +177,32 @@ export function AppSidebar() {
 
             {overflow.length > 0 && (
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="w-full text-left px-3 py-2 text-xs text-muted-foreground/80 hover:text-foreground flex items-center gap-2 mt-1 rounded-md hover:bg-foreground/5 transition-colors">
-                    View more spaces
-                    <ChevronDown className="size-3 opacity-60" />
-                  </button>
+                <DropdownMenuTrigger
+                  render={
+                    <button className="w-full text-left px-3 py-2 text-xs text-muted-foreground/80 hover:text-foreground flex items-center gap-2 mt-1 rounded-md hover:bg-foreground/5 transition-colors" />
+                  }
+                >
+                  View more spaces
+                  <ChevronDown className="size-3 opacity-60" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="start"
                   className="w-56 max-h-64 overflow-y-auto"
                 >
                   {overflow.map((p) => (
-                    <DropdownMenuItem key={p.id} asChild>
-                      <Link
-                        href={`/projects/${p.id}`}
-                        className="flex items-center gap-2"
-                      >
-                        <span
-                          className={`size-2 rounded-full ring-2 ${getColor(p.id)}`}
+                    <DropdownMenuItem
+                      key={p.id}
+                      render={
+                        <Link
+                          href={`/projects/${p.id}`}
+                          className="flex items-center gap-2"
                         />
-                        <span className="truncate">{p.title}</span>
-                      </Link>
+                      }
+                    >
+                      <span
+                        className={`size-2 rounded-full ring-2 ${getColor(p.id)}`}
+                      />
+                      <span className="truncate">{p.title}</span>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -225,19 +230,22 @@ export function AppSidebar() {
           ) : (
             /* Profile Exist State */
             <DropdownMenu>
-              <DropdownMenuTrigger>
-                <div className="w-full px-4 py-2 border rounded-md flex items-center gap-3 cursor-pointer hover:bg-foreground/5 hover:text-foreground transition-all duration-300">
-                  <Avatar>
-                    <AvatarImage src={profile?.profile_image_url} />
-                    <AvatarFallback>PP</AvatarFallback>
-                  </Avatar>
+              <DropdownMenuTrigger
+                nativeButton={false}
+                render={
+                  <div className="w-full px-4 py-2 border rounded-md flex items-center gap-3 cursor-pointer hover:bg-foreground/5 hover:text-foreground transition-all duration-300" />
+                }
+              >
+                <Avatar>
+                  <AvatarImage src={profile?.profile_image_url} />
+                  <AvatarFallback>PP</AvatarFallback>
+                </Avatar>
 
-                  <div className="space-y-2">
-                    <span className="text-sm font-semibold">
-                      {profile?.name}
-                    </span>
-                    <span className="text-xs">{profile?.email}</span>
-                  </div>
+                <div className="space-y-2">
+                  <span className="text-sm font-semibold">
+                    {profile?.name}
+                  </span>
+                  <span className="text-xs">{profile?.email}</span>
                 </div>
               </DropdownMenuTrigger>
 

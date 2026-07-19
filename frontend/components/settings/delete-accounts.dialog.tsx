@@ -62,10 +62,8 @@ export default function DeleteAccountDialog() {
   return (
     <Dialog onOpenChange={(open) => !open && form.reset()}>
       {/* The visible trigger button that sits in your settings layout */}
-      <DialogTrigger asChild>
-        <Button variant="destructive" className="cursor-pointer">
-          Delete Account
-        </Button>
+      <DialogTrigger render={<Button variant="destructive" className="cursor-pointer" />}>
+        Delete Account
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[425px]">
@@ -112,15 +110,8 @@ export default function DeleteAccountDialog() {
             )}
 
             <DialogFooter className="gap-2 sm:gap-0 pt-2">
-              <DialogClose asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={isPending}
-                  className="cursor-pointer"
-                >
-                  Cancel
-                </Button>
+              <DialogClose render={<Button type="button" variant="outline" disabled={isPending} className="cursor-pointer" />}>
+                Cancel
               </DialogClose>
 
               <Button
