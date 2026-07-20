@@ -7,6 +7,7 @@ import { CreateTasksDto } from './dto/create-tasks.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { type User } from '@supabase/supabase-js';
 import { TasksService } from './tasks.service';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Controller('projects/:projectId/tasks')
 @UseGuards(SupabaseGuard, RoleGuard)
@@ -34,8 +35,8 @@ export class TasksController {
     //only core tasks update: description , title , and due date 
     @Patch(':taskId')
     @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
-    async updateTask(@Param('projectId') projectId:string, @Param('taskId') taskId:string){
-        return this.taskService.updateTask(projectId, taskId)
+    async updateTask(@Param('projectId') projectId:string, @Param('taskId') taskId:string, @Body() dto:UpdateTaskDto){
+        return this.taskService.updateTask(projectId, taskId, dto)
     }
 
     @Delete(':taskId')

@@ -9,7 +9,6 @@ import { ProfileModule } from './profile/profile.module';
 import { TasksService } from './tasks/tasks.service';
 import { TasksController } from './tasks/tasks.controller';
 import { TasksModule } from './tasks/tasks.module';
-import { TasksModule } from './tasks/tasks.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
