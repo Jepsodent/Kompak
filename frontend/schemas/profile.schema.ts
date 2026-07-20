@@ -12,11 +12,11 @@ export const editProfileSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(4, "Username must be at least 4 characters.")
-    .max(16, "Username must be no more than 16 characters.")
+    .min(3, "Name must be at least 3 characters.")
+    .max(30, "Name must be no more than 30 characters.")
     .regex(
-      /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letter, numbers, and underscores.",
+      /^[\p{L}\p{N}_]+$/u,
+      "Username can only contain letters, numbers, and underscores.",
     ),
   profileImage: z
     .instanceof(File)

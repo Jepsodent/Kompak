@@ -15,22 +15,21 @@ export const registerSchema = z
     username: z
       .string()
       .trim()
-      .min(4, "Username must be at least 4 characters.")
-      .max(16, "Username must be no more than 16 characters.")
+      .min(3, "Username must be at least 3 characters.")
+      .max(30, "Username must be no more than 30 characters.")
       .regex(
-        /^[a-zA-Z0-9_]+$/,
-        "Username can only contain letter, numbers, and underscores.",
+        /^[\p{L}\p{N}_]+$/u,
+        "Username can only contain letters, numbers, and underscores.",
       ),
     email: z
       .string()
       .trim()
       .toLowerCase()
-      .min(1, "Email address is required.")
       .email("Please provide a valid email format."),
     password: z
       .string()
-      .min(6, "Password must be at least 6 characters.")
-      .max(32, "Password must be no more than 32 characters."),
+      .min(8, "Password must be at least 6 characters.")
+      .max(72, "Password must be no more than 32 characters."),
     passwordConfirmation: z.string().min(1, "Please confirm your password."),
   })
   .refine((data) => data.password === data.passwordConfirmation, {
