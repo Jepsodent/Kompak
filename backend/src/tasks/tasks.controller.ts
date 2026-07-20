@@ -8,6 +8,7 @@ import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { type User } from '@supabase/supabase-js';
 import { TasksService } from './tasks.service';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { AssignMemberTaskDto } from './dto/assign-member.dto';
 
 @Controller('projects/:projectId/tasks')
 @UseGuards(SupabaseGuard, RoleGuard)
@@ -43,6 +44,20 @@ export class TasksController {
     @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
     async deleteTask(@Param('projectId') projectId:string, @Param('taskId') taskId:string){
         return this.taskService.deleteTask(projectId, taskId)
+    }
+
+    @Post(':taskId/assign')
+    @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
+    async assignMemberTask(@Param('projectId') projectId:string, @Param('taskId') taskId:string, @Body() dto: AssignMemberTaskDto){
+        return this.taskService.assignMemberTask(projectId, taskId,dto)
+    }
+
+
+    @Delete(':taskId/assign/:memberId')
+    @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
+    async unassignMemberTask(@Param('projectId') projectId:string, @Param('taskId') taskId:string, @Param('memberId') memberId:string){
+        return this.taskService.unassignMemberTask(projectId, taskId, memberId)
+
     }
 
 

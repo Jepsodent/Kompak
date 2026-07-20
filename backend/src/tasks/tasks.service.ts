@@ -1,7 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { SupabaseRequestService } from 'src/supabase/supabase-request.service';
 import { CreateTasksDto } from './dto/create-tasks.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { AssignMemberTaskDto } from './dto/assign-member.dto';
 
 @Injectable()
 export class TasksService implements OnModuleInit {
@@ -144,7 +145,46 @@ export class TasksService implements OnModuleInit {
         }
         if(!data) throw new NotFoundException('Task not found in this project')
         return {message: 'Task has been successfully deleted'}
+    }
 
+
+    //helper for assignMember / unassignMember flow
+
+    private  async checkValidMember(memberId:string, projectId:string){
+        const {data:member, error:memberError} = await this.supabase.client.from('project_members').select('id').eq('id',memberId).eq('project_id',projectId).eq('membership_status','ACTIVE').single()
+        if(!member || memberError){
+            throw new NotFoundException('Target member not found in this project')
+        }
+        return member
+    }
+
+    async assignMemberTask(projectId:string,taskId:string, dto:AssignMemberTaskDto){
+        const member =  await this.checkValidMember(dto.memberId, projectId)
+        const {data, error} =  await this.supabase.client.from('task_assignees').insert({
+            project_member_id: member.id,
+            task_id: taskId,
+        }).select().single()
+        if(error?.code === '23505'){
+            throw new ConflictException('Member is already assigned to this task')
+        }
+
+        if(!data || error){
+            throw new BadRequestException('Failed to assign member: ' + error.message)
+        }
+        return data
+    }
+
+    async unassignMemberTask(projectId:string, taskId:string, memberId:string){
+        const member = await this.checkValidMember(memberId, projectId)
+        const {data, error} = await this.supabase.client.from('task_assignees').delete().eq('project_member_id', member.id).eq('task_id',taskId).select().maybeSingle()
+        
+        if(error){
+            throw new BadRequestException('Failed to unassign member: '+ error.message)
+        }
+        if(!data){
+            throw new NotFoundException('Member is not assigned to this task.')
+        }
+        return {message: "Member successfully unassigned from the task."}
     }
 
 }
