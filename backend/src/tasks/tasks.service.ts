@@ -5,6 +5,7 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { AssignMemberTaskDto } from './dto/assign-member.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { TaskStatusService } from './task-status.service';
+import { SubmitProofDto } from './dto/submit-proof.dto';
 
 @Injectable()
 export class TasksService{
@@ -203,6 +204,29 @@ export class TasksService{
         }).eq('id',taskId).eq('project_id',projectId).select('id').single()
         if(!data || error) throw new BadRequestException('Failed to update status task: '+ error.message)
         return {message: "Successfully updated task status to "+ dto.status}
+    }
+
+    async submitProof(taskId:string, projectId:string, userId:string, dto:SubmitProofDto){
+        const member = await this.checkValidMember(userId, projectId)
+        const {data: proof, error:proofError} = await this.supabase.client.from('proof_of_works').insert({
+            task_id: taskId,
+            summary_notes: dto.summary_notes,
+            submitted_by_member_id: member.id
+        }).select('id').single()
+        if (!proof || proofError) throw new BadRequestException('Failed to insert proof: '+ proofError.message)
+        if(dto.attachments && dto.attachments.length > 0){
+            const attachmentPayloads = dto.attachments.map((file) => ({
+                proof_of_work_id: proof.id,
+                file_name: file.file_name,
+                file_url: file.file_url,
+                mime_type: file.mime_type
+            }))
+            const {error:attachError} = await this.supabase.client.from('proof_attachments').insert(attachmentPayloads)
+            if(attachError){
+                throw new BadRequestException('Failed to save attachments: '+ attachError.message)
+            }
+        }
+        return {message: "Proof of work submitted successfully"}
     }
 
 

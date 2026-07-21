@@ -10,6 +10,7 @@ import { TasksService } from './tasks.service';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { AssignMemberTaskDto } from './dto/assign-member.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
+import { SubmitProofDto } from './dto/submit-proof.dto';
 
 @Controller('projects/:projectId/tasks')
 @UseGuards(SupabaseGuard, RoleGuard)
@@ -66,6 +67,12 @@ export class TasksController {
     @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
     async updateTaskStatus(@Param('taskId') taskId:string, @CurrentUser() user:User, @Param('projectId') projectId:string, @Body() dto:UpdateTaskStatusDto){
         return this.taskService.updateTaskStatus(taskId, user.id, projectId, dto)
+    }
+
+    @Post(':taskId/proof')
+    @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
+    async submitProof(@Param('taskId') taskId:string,@Param('projectId') projectId:string,@CurrentUser() user:User,@Body() dto:SubmitProofDto){
+        return this.taskService.submitProof(taskId,projectId, user.id, dto)
     }
 
 

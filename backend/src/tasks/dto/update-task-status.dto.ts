@@ -1,5 +1,5 @@
 import { IsIn, IsNotEmpty, IsString } from "class-validator";
-import { TASK_STATUS_CODES, TaskStatusCode } from "src/common/enums/task-status.enum";
+import { TASK_STATUS_CODES, type TaskStatusCode } from "src/common/enums/task-status.enum";
 
 
 export class UpdateTaskStatusDto{
