@@ -9,6 +9,7 @@ import { type User } from '@supabase/supabase-js';
 import { TasksService } from './tasks.service';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { AssignMemberTaskDto } from './dto/assign-member.dto';
+import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 
 @Controller('projects/:projectId/tasks')
 @UseGuards(SupabaseGuard, RoleGuard)
@@ -58,6 +59,13 @@ export class TasksController {
     async unassignMemberTask(@Param('projectId') projectId:string, @Param('taskId') taskId:string, @Param('memberId') memberId:string){
         return this.taskService.unassignMemberTask(projectId, taskId, memberId)
 
+    }
+
+    //update status workflow
+    @Patch(':taskId/status')
+    @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
+    async updateTaskStatus(@Param('taskId') taskId:string, @CurrentUser() user:User, @Param('projectId') projectId:string, @Body() dto:UpdateTaskStatusDto){
+        return this.taskService.updateTaskStatus(taskId, user.id, projectId, dto)
     }
 
 

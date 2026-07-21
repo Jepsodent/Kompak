@@ -1,29 +1,34 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { SupabaseRequestService } from 'src/supabase/supabase-request.service';
 import { CreateTasksDto } from './dto/create-tasks.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { AssignMemberTaskDto } from './dto/assign-member.dto';
+import { TaskStatusCode } from 'src/common/enums/task-status.enum';
+import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 
 @Injectable()
 export class TasksService implements OnModuleInit {
-    private defaultTodoStatusId!:string;
+    private statusMap = {} as Record<TaskStatusCode,string>;
 
     constructor(private readonly supabase:SupabaseRequestService){}
     // self healing pattern 
     async onModuleInit() {
-        let {data} = await this.supabase.client.from('task_statuses').select('id').eq('code', 'TODO').maybeSingle()
-        if(!data){
-            const {data:newStatus, error} = await this.supabase.client.from('task_statuses').insert({
-                code: 'TODO', 
-                name: 'To Do',
-                sort_order: 1,
-            })
-            .select('id')
-            .single()
-            if(error || !newStatus) throw new Error('Failed to auto create TODO status in DB!')
-            data = newStatus
+        const defaultStatuses = [
+            {code: 'TODO', name: 'To Do',sort_order: 1}, 
+            {code: 'IN_PROGRESS', name: 'In Progress',sort_order: 2}, 
+            {code: 'IN_REVIEW', name: 'In Review',sort_order: 3}, 
+            {code: 'DONE', name: 'Done',sort_order: 4}, 
+            
+        ]
+        const {data, error} = await this.supabase.client.from('task_statuses').upsert(
+            defaultStatuses, {onConflict: 'code', ignoreDuplicates: true}).select('code,id')
+        if(!data || error || data.length === 0){
+            throw new Error('Failed to self-heal task_statuses in DB!')
         }
-        this.defaultTodoStatusId = data.id
+        data.forEach((status) => {
+            this.statusMap[status.code] = status.id
+        })
+        
     }
 
 
@@ -43,7 +48,7 @@ export class TasksService implements OnModuleInit {
             ...dto, 
             project_id: projectId,
             created_by_member_id: member.id,
-            status_id: this.defaultTodoStatusId
+            status_id: this.statusMap['TODO']
         }).select().single()
         if(!data || error){
             throw new BadRequestException('Failed to create task: '+ error.message)
@@ -151,7 +156,11 @@ export class TasksService implements OnModuleInit {
     //helper for assignMember / unassignMember flow
 
     private  async checkValidMember(memberId:string, projectId:string){
-        const {data:member, error:memberError} = await this.supabase.client.from('project_members').select('id').eq('id',memberId).eq('project_id',projectId).eq('membership_status','ACTIVE').single()
+        const {data:member, error:memberError} = await this.supabase.client.from('project_members').select('id, role')
+        .eq('project_id',projectId)
+        .eq('membership_status','ACTIVE')
+        .or(`profile_id.eq.${memberId},id.eq.${memberId}`)
+        .single()
         if(!member || memberError){
             throw new NotFoundException('Target member not found in this project')
         }
@@ -186,5 +195,38 @@ export class TasksService implements OnModuleInit {
         }
         return {message: "Member successfully unassigned from the task."}
     }
+
+    // task update status workflow
+    async updateTaskStatus(taskId:string, userId:string, projectId:string, dto:UpdateTaskStatusDto){
+        const member = await this.checkValidMember(userId, projectId)
+        const targetStatusCode = this.statusMap[dto.status] // string id
+        const {data:task, error:taskError } = await this.supabase.client.from('tasks').select(`
+                task_statuses(code)
+            `).eq('id',taskId).eq('project_id',projectId).single()
+        if(taskError || !task)throw new NotFoundException('Task not found!')
+        if(dto.status === 'DONE'){
+            if(member.role !== 'LEADER'){
+                throw new ForbiddenException('Only Leader can move task to DONE')
+            }
+        }
+        else if(dto.status === 'IN_REVIEW'){
+            const {data:proofData} = await this.supabase.client.from('proof_of_works').select('id').eq('task_id',taskId).maybeSingle()
+            if(!proofData){
+                throw new BadRequestException('Please submit proof of work first before moving to In Review.')
+            }
+        }
+        else if((dto.status === 'IN_PROGRESS' || dto.status === 'TODO') && task.task_statuses.code === 'IN_REVIEW'){
+            if(member.role !== 'LEADER'){
+                throw new ForbiddenException('Only Leader can reject a task back to In Progress.')
+            }
+        }
+
+        const {data, error} = await this.supabase.client.from('tasks').update({
+            status_id: targetStatusCode
+        }).eq('id',taskId).eq('project_id',projectId).select('id').single()
+        if(!data || error) throw new BadRequestException('Failed to update status task: '+ error.message)
+        return {message: "Successfully updated task status to "+ dto.status}
+    }
+
 
 }
