@@ -1,39 +1,16 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { SupabaseRequestService } from 'src/supabase/supabase-request.service';
 import { CreateTasksDto } from './dto/create-tasks.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { AssignMemberTaskDto } from './dto/assign-member.dto';
-import { TaskStatusCode } from 'src/common/enums/task-status.enum';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
+import { TaskStatusService } from './task-status.service';
 
 @Injectable()
-export class TasksService implements OnModuleInit {
-    private statusMap = {} as Record<TaskStatusCode,string>;
-
-    constructor(private readonly supabase:SupabaseRequestService){}
-    // self healing pattern 
-    async onModuleInit() {
-        const defaultStatuses = [
-            {code: 'TODO', name: 'To Do',sort_order: 1}, 
-            {code: 'IN_PROGRESS', name: 'In Progress',sort_order: 2}, 
-            {code: 'IN_REVIEW', name: 'In Review',sort_order: 3}, 
-            {code: 'DONE', name: 'Done',sort_order: 4}, 
-            
-        ]
-        const {data, error} = await this.supabase.client.from('task_statuses').upsert(
-            defaultStatuses, {onConflict: 'code', ignoreDuplicates: true}).select('code,id')
-        if(!data || error || data.length === 0){
-            throw new Error('Failed to self-heal task_statuses in DB!')
-        }
-        data.forEach((status) => {
-            this.statusMap[status.code] = status.id
-        })
-        
-    }
-
-
+export class TasksService{
     
-
+    constructor(private readonly supabase:SupabaseRequestService, private readonly taskStatus: TaskStatusService){}
+    
     async createTask(projectId:string, dto:CreateTasksDto, userId:string){
         const {data:member, error:memberError} = await this.supabase.client.from('project_members').select('id').eq('project_id', projectId).eq('profile_id', userId).eq('membership_status', 'ACTIVE').single()
         if(!member || memberError){
@@ -48,7 +25,7 @@ export class TasksService implements OnModuleInit {
             ...dto, 
             project_id: projectId,
             created_by_member_id: member.id,
-            status_id: this.statusMap['TODO']
+            status_id: this.taskStatus.getStatusId('TODO')
         }).select().single()
         if(!data || error){
             throw new BadRequestException('Failed to create task: '+ error.message)
@@ -199,7 +176,7 @@ export class TasksService implements OnModuleInit {
     // task update status workflow
     async updateTaskStatus(taskId:string, userId:string, projectId:string, dto:UpdateTaskStatusDto){
         const member = await this.checkValidMember(userId, projectId)
-        const targetStatusCode = this.statusMap[dto.status] // string id
+        const targetStatusCode = this.taskStatus.getStatusId(dto.status) // string id
         const {data:task, error:taskError } = await this.supabase.client.from('tasks').select(`
                 task_statuses(code)
             `).eq('id',taskId).eq('project_id',projectId).single()
