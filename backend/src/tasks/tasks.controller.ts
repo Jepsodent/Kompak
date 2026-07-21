@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { ProjectRole } from 'src/common/enums/project-role.enum';
 import { RoleGuard } from 'src/common/guards/roles.guard';
@@ -11,6 +11,7 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { AssignMemberTaskDto } from './dto/assign-member.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { SubmitProofDto } from './dto/submit-proof.dto';
+import { ReviewTaskDto } from './dto/review-task.dto';
 
 @Controller('projects/:projectId/tasks')
 @UseGuards(SupabaseGuard, RoleGuard)
@@ -57,7 +58,7 @@ export class TasksController {
 
     @Delete(':taskId/assign/:memberId')
     @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
-    async unassignMemberTask(@Param('projectId') projectId:string, @Param('taskId') taskId:string, @Param('memberId') memberId:string){
+    async unassignMemberTask(@Param('projectId') projectId:string, @Param('taskId') taskId:string, @Param('memberId', ParseUUIDPipe) memberId:string){
         return this.taskService.unassignMemberTask(projectId, taskId, memberId)
 
     }
@@ -73,6 +74,12 @@ export class TasksController {
     @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
     async submitProof(@Param('taskId') taskId:string,@Param('projectId') projectId:string,@CurrentUser() user:User,@Body() dto:SubmitProofDto){
         return this.taskService.submitProof(taskId,projectId, user.id, dto)
+    }
+
+    @Post(':taskId/review')
+    @Roles(ProjectRole.LEADER)
+    async taskReview(@Param('taskId') taskId:string, @Param('projectId') projectId:string, @CurrentUser() user:User,@Body() dto:ReviewTaskDto){
+        return this.taskService.reviewTask(taskId,projectId, user.id, dto)
     }
 
 

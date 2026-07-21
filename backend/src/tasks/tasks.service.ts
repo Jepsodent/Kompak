@@ -6,6 +6,7 @@ import { AssignMemberTaskDto } from './dto/assign-member.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { TaskStatusService } from './task-status.service';
 import { SubmitProofDto } from './dto/submit-proof.dto';
+import { ReviewTaskDto } from './dto/review-task.dto';
 
 @Injectable()
 export class TasksService{
@@ -182,21 +183,17 @@ export class TasksService{
                 task_statuses(code)
             `).eq('id',taskId).eq('project_id',projectId).single()
         if(taskError || !task)throw new NotFoundException('Task not found!')
+
+        if(task.task_statuses.code === 'IN_REVIEW'){
+            throw new BadRequestException('Task in Review cannot be dragged. Please use the review button inside task details')
+        }
+
         if(dto.status === 'DONE'){
-            if(member.role !== 'LEADER'){
-                throw new ForbiddenException('Only Leader can move task to DONE')
-            }
+            throw new BadRequestException('Cannot move task to Done Manually, Leader must approve it via Review')
         }
-        else if(dto.status === 'IN_REVIEW'){
-            const {data:proofData} = await this.supabase.client.from('proof_of_works').select('id').eq('task_id',taskId).maybeSingle()
-            if(!proofData){
-                throw new BadRequestException('Please submit proof of work first before moving to In Review.')
-            }
-        }
-        else if((dto.status === 'IN_PROGRESS' || dto.status === 'TODO') && task.task_statuses.code === 'IN_REVIEW'){
-            if(member.role !== 'LEADER'){
-                throw new ForbiddenException('Only Leader can reject a task back to In Progress.')
-            }
+        if(dto.status === 'IN_REVIEW'){
+            const { data: proofData } = await this.supabase.client.from('proof_of_works').select('id').eq('task_id', taskId).maybeSingle();
+            if(!proofData) throw new BadRequestException('Please submit proof of work first before moving to In Review')
         }
 
         const {data, error} = await this.supabase.client.from('tasks').update({
@@ -207,6 +204,18 @@ export class TasksService{
     }
 
     async submitProof(taskId:string, projectId:string, userId:string, dto:SubmitProofDto){
+        const {data:status, error: statusError} = await this.supabase.client.from('tasks')
+        .select(`
+            task_statuses(code)`)
+        .eq('id',taskId)
+        .eq('project_id',projectId)
+        .single()
+        if(!status || statusError) throw new NotFoundException('Task not found')
+
+        if(status.task_statuses.code !== 'IN_PROGRESS'){
+            throw new BadRequestException('Proof of work can only be submitted when task is In Progress')
+        }
+
         const member = await this.checkValidMember(userId, projectId)
         const {data: proof, error:proofError} = await this.supabase.client.from('proof_of_works').insert({
             task_id: taskId,
@@ -229,5 +238,43 @@ export class TasksService{
         return {message: "Proof of work submitted successfully"}
     }
 
+    async reviewTask(taskId:string, projectId:string, userId:string, dto:ReviewTaskDto){
+        const {data:status, error: statusError} = await this.supabase.client.from('tasks')
+        .select(`
+            task_statuses(code)`)
+        .eq('id',taskId)
+        .eq('project_id',projectId)
+        .single()
+        if(!status || statusError) throw new NotFoundException('Task not found')
+
+        if(status.task_statuses.code !== 'IN_REVIEW'){
+            throw new BadRequestException('Task must be In Review to be reviewed')
+        }
+
+        const member= await this.checkValidMember(userId, projectId)
+        const {data:latestProof, error:proofError} = await this.supabase.client.from('proof_of_works').select('id').eq('task_id',taskId).order('submitted_at',{ascending: false}).limit(1).single()
+        if(!latestProof || proofError) throw new NotFoundException('Proof of work not found')
+        
+        const {data, error} = await this.supabase.client.from('task_reviews').insert({
+            proof_of_work_id: latestProof.id,
+            rating: dto.rating,
+            feedback: dto.feedback,
+            reviewer_member_id: member.id,
+        }).select().single()
+        if(!data || error) throw new BadRequestException('Failed to save reviews: ',error.message)
+        
+        const targetStatusCode = dto.action === 'APPROVE' ? 'DONE' : 'IN_PROGRESS'
+        const targetStatusId = this.taskStatus.getStatusId(targetStatusCode)
+
+        const {error: updateTaskError} = await this.supabase.client.from('tasks').update({
+            status_id: targetStatusId
+        }).eq('id',taskId).eq('project_id',projectId)
+        if(updateTaskError) throw new BadRequestException('Failed to update task status after review: ' + updateTaskError.message)
+    
+        return { 
+            message: "Task has been successfully " + (dto.action === 'APPROVE' ? "approved and moved to Done" : "rejected and moved to In Progress") 
+        };
+
+    }
 
 }
