@@ -215,6 +215,16 @@ export class TasksService{
         if(status.task_statuses.code !== 'IN_PROGRESS'){
             throw new BadRequestException('Proof of work can only be submitted when task is In Progress')
         }
+        const {data: existingProofs, error:checkError} =  await this.supabase.client.from('proof_of_works')
+        .select('id, task_reviews(id)')
+        .eq('task_id', taskId)
+        
+        if(checkError) throw new BadRequestException('Failed to check existing proofs: '+ checkError.message)
+        
+        const hasPendingProof = existingProofs?.some(
+            (p) => !p.task_reviews || (Array.isArray(p.task_reviews) && p.task_reviews.length === 0)
+        )
+        if(hasPendingProof) throw new  BadRequestException('You have already submitted a proof of work. Please wait for the leader to review or reject it first!')
 
         const member = await this.checkValidMember(userId, projectId)
         const {data: proof, error:proofError} = await this.supabase.client.from('proof_of_works').insert({
