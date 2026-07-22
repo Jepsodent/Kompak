@@ -1,26 +1,52 @@
 "use client";
 
-import { Task } from "@/types/kanban.type";
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import KanbanBoard from "@/components/kanban/kanban-board";
+import CreateTaskSheet from "@/components/tasks/create-task.sheet";
+import { useTasks } from "@/hooks/useTask";
+import { Task } from "@/types/task.type";
+import EditTaskSheet from "@/components/tasks/edit-task.sheet";
 
-const INITIAL_TASKS: Task[] = [
-  { id: "1", columnId: "todo", content: "Design landing page" },
-  { id: "2", columnId: "todo", content: "Review pull requests" },
-  { id: "3", columnId: "in-progress", content: "Setup Next.js app" },
-  { id: "4", columnId: "done", content: "Initial research" },
-];
+interface KanbanPageProps {
+  params: Promise<{ projectId: string }>;
+}
 
-export default function KanbanPage() {
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+export default function KanbanPage({ params }: KanbanPageProps) {
+  const { projectId } = use(params);
+  const { data: fetchedTasks, isLoading, isError } = useTasks(projectId);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
-  if (!tasks) return <p>No tasks found!</p>;
+  // Local state for DnD smooth animations
+  const [tasks, setTasks] = useState<Task[]>([]);
+  useEffect(() => {
+    if (fetchedTasks) {
+      setTasks(fetchedTasks);
+    }
+  }, [fetchedTasks]);
+
+  if (isLoading) return <p className="p-8">Loading tasks...</p>;
+  if (isError) return <p className="p-8 text-red-500">Failed to load tasks.</p>;
+  console.log(tasks);
 
   return (
     <div className="p-8 space-y-4">
+      <CreateTaskSheet projectId={projectId} />
+
       <h2 className="text-xl font-bold ">Kanban Board</h2>
 
-      <KanbanBoard tasks={tasks} setTasks={setTasks} />
+      <KanbanBoard
+        projectId={projectId}
+        tasks={tasks}
+        setTasks={setTasks}
+        onEditTask={(task) => setSelectedTaskId(task.id)}
+      />
+
+      <EditTaskSheet
+        projectId={projectId}
+        taskId={selectedTaskId}
+        open={!!selectedTaskId}
+        onOpenChange={(open) => !open && setSelectedTaskId(null)}
+      />
     </div>
   );
 }

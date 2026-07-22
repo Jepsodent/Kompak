@@ -1,5 +1,4 @@
-import { PartialType } from "@nestjs/swagger";
-import { CreateTasksDto } from "./create-tasks.dto";
+import { PartialType } from '@nestjs/swagger';
+import { CreateTaskDto } from './create-task.dto';
 
-
-export class UpdateTaskDto extends PartialType(CreateTasksDto) {}
+export class UpdateTaskDto extends PartialType(CreateTaskDto) {}
