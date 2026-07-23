@@ -28,6 +28,9 @@ Granular Patch di Backend mengurangi resiko
     - Request User A (hanya membawa { title }): PostgreSQL meng-update baris tabel tasks.
     - Request User B (hanya membawa { assignee_ids }): PostgreSQL meng-update tabel pivot task_assignees.
 Hasilnya: Kedua perubahan bergabung sempurna tanpa saling menimpa!
+
+
+web socket/ real-time event juga bisa mengatasi concurrency risk
 */
 @Injectable()
 export class TasksService{
