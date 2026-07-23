@@ -6,6 +6,9 @@ import { ProjectsModule } from './projects/projects.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import * as Joi from 'joi';
 import { ProfileModule } from './profile/profile.module';
+import { TasksService } from './tasks/tasks.service';
+import { TasksController } from './tasks/tasks.controller';
+import { TasksModule } from './tasks/tasks.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,8 +29,9 @@ import { ProfileModule } from './profile/profile.module';
     ProjectsModule,
     DashboardModule,
     ProfileModule,
+    TasksModule,
   ],
-  controllers: [AppController],
-  providers: [],
+  controllers: [AppController, TasksController],
+  providers: [TasksService],
 })
 export class AppModule {}

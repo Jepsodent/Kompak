@@ -1,9 +1,8 @@
-"use client";
+  "use client";
 
 import { useState } from "react";
 import type { Role } from "@/constants/users.constant";
 import { TASKS } from "@/constants/tasks.constant";
-import { CURRENT_USER } from "@/constants/users.constant";
 import {
   Select,
   SelectContent,
@@ -16,6 +15,7 @@ import { DataTable, type ColumnDef } from "@/components/common/data-table";
 import { Project, ProjectMember } from "@/types/project.type";
 import { getColor, getInitials } from "@/lib/utils";
 import { useMember } from "@/hooks/useMember";
+import { useProfile } from "@/hooks/useProfile";
 
 const statusTone: Record<string, string> = {
   TODO: "bg-muted text-muted-foreground",
@@ -31,11 +31,12 @@ function formatDay(iso: string) {
 export function ProjectListTab({ project, members }: { project: Project, members: ProjectMember[] }) {
   // console.log(members)
   const {kickMember, updateRole} = useMember(project.id)
-
+  const {data:  CURRENT_USER} = useProfile()
+  console.log(CURRENT_USER)
+  console.log(members)
   const canManage = members.some(
-    (m) => m.id === CURRENT_USER.id && m.role === "LEADER"
+    (m) => m.profile_id === CURRENT_USER.id && m.role === "LEADER"
   );
-
 
   // nanti di integrasiin kalo udah ada endpointnya
   const tasks = TASKS.filter((t) => t.projectId === project.id);
@@ -126,16 +127,16 @@ export function ProjectListTab({ project, members }: { project: Project, members
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
                   {m.profiles.name}
-                  {m.id === CURRENT_USER.id && (
+                  {m.profile_id === CURRENT_USER.id && (
                     <span className="ml-2 text-[10px] text-muted-foreground">(you)</span>
                   )}
                 </p>
               </div>
-              {canManage && m.id !== CURRENT_USER.id ? (
+              {canManage && m.profile_id !== CURRENT_USER.id ? (
                 <>
                   <Select
                     value={m.role}
-                    onValueChange={(v) => changeRole(m.id, v as Role)}
+                    onValueChange={(v) => changeRole(m.profile_id, v as Role)}
                   >
                     <SelectTrigger className="w-32 h-8 text-xs bg-transparent">
                       <SelectValue />
@@ -146,7 +147,7 @@ export function ProjectListTab({ project, members }: { project: Project, members
                     </SelectContent>
                   </Select>
                   <button
-                    onClick={() => removeMember(m.id)}
+                    onClick={() => removeMember(m.profile_id)}
                     className="size-8 flex items-center justify-center rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                     aria-label="Remove member"
                   >

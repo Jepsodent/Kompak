@@ -67,6 +67,8 @@ export class ProjectsService {
         if(deletedError){
             throw new BadRequestException('Delete Failed: '+ deletedError?.message )
         }
+        // develop cuma boleh yang punya project yang boleh delete (bukan leader) 
+
         return {message: `Project ${data.title} successfully deleted`}        
     }
 
@@ -126,13 +128,17 @@ export class ProjectsService {
                 throw new BadRequestException("There must be at least one Leader in the project")
             }
         }
+        if(project.created_by === memberId){
+            throw new BadRequestException('You cannot change this person role!')
+        }
+
         const {data, error} = await this.supabase.client.from('project_members').update({role: dto.role}).eq('project_id',projectId).eq('profile_id',memberId).select().single()
         if(error) throw new BadRequestException(error.message)
         return data
     }
 
     async deleteMember(projectId:string, memberId:string){
-        const {data:project, error:errorProject} =  await this.supabase.client.from('projects').select('id').eq('id',projectId).single()
+        const {data:project, error:errorProject} =  await this.supabase.client.from('projects').select('id, created_by').eq('id',projectId).single()
         if(!project|| errorProject) throw new NotFoundException('Project not found')
         
         const {data:memberProject, error:memberError} = await this.supabase.client.from('project_members').select('role').eq('profile_id',memberId).eq('project_id',projectId).single()
@@ -140,6 +146,11 @@ export class ProjectsService {
         if(!memberProject || memberError){
             throw new NotFoundException("Member not found")
         }
+
+        if(project.created_by === memberId){
+            throw new BadRequestException('You cannot kick this person!')
+        }
+
         if(memberProject.role === (ProjectRole.LEADER as string)){
             const {data:leader} =  await this.supabase.client.from('project_members').select('id').eq('project_id',projectId).eq('membership_status','ACTIVE').eq('role',ProjectRole.LEADER)
             if(leader && leader.length <= 1){

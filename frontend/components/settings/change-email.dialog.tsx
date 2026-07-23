@@ -73,10 +73,8 @@ export default function ChangeEmailDialog() {
       }
     >
       {/* Trigger button visible on the main settings view */}
-      <DialogTrigger>
-        <Button variant="secondary" className="cursor-pointer">
-          Change Email Address
-        </Button>
+      <DialogTrigger render={<Button variant="secondary" className="cursor-pointer" />}>
+        Change Email Address
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[425px]">
@@ -149,15 +147,8 @@ export default function ChangeEmailDialog() {
             )}
 
             <DialogFooter className="gap-2 sm:gap-0 pt-2">
-              <DialogClose>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={isPending}
-                  className="cursor-pointer"
-                >
-                  Cancel
-                </Button>
+              <DialogClose render={<Button type="button" variant="outline" disabled={isPending} className="cursor-pointer" />}>
+                Cancel
               </DialogClose>
 
               <Button

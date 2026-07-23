@@ -13,9 +13,11 @@ const weekdays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 export function DashboardCalendar({
   selectedDate,
   onSelect,
+  tasks = [],
 }: {
   selectedDate: string;
   onSelect: (iso: string) => void;
+  tasks?: { due_date: string }[];
 }) {
   const [cursor, setCursor] = useState(() => {
     const d = new Date(selectedDate);
@@ -29,9 +31,17 @@ export function DashboardCalendar({
 
   const dueDates = useMemo(() => {
     const set = new Set<string>();
-    for (const t of TASKS) if (t.status !== "DONE") set.add(t.dueDate);
+    if (tasks && tasks.length > 0) {
+      for (const t of tasks) {
+        if (t.due_date) {
+          set.add(t.due_date.slice(0, 10));
+        }
+      }
+    } else {
+      for (const t of TASKS) if (t.status !== "DONE") set.add(t.dueDate);
+    }
     return set;
-  }, []);
+  }, [tasks]);
 
   const cells = useMemo(() => {
     const first = new Date(Date.UTC(cursor.year, cursor.month, 1));

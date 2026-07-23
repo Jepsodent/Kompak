@@ -7,8 +7,7 @@ export function useDashboard(){
         queryFn: () => DashboardService.getStats(),
     })
 
-    console.log(dashboardQuery.error)
-
+    // console.log(dashboardQuery.error)
     return {
         data: dashboardQuery.data,
         loading: dashboardQuery.isLoading,

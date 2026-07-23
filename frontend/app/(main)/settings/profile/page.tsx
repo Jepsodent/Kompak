@@ -1,5 +1,6 @@
 "use client";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,13 +20,13 @@ import {
 } from "@/schemas/profile.schema";
 import { StatusMessage } from "@/types/auth.type";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Pencil } from "lucide-react";
-import Image from "next/image";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { CheckCircle2, CircleX, Pencil } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
 export default function ProfilePage() {
-  const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
   const [requestStatus, setRequestStatus] = useState<StatusMessage>({
     text: "",
     type: null,
@@ -39,9 +40,9 @@ export default function ProfilePage() {
     defaultValues: { name: "", profileImage: null },
   });
 
-  const watchedName = form.watch("name");
   const watchedImageFile = form.watch("profileImage");
 
+  // Reset form defaults when profile data arrives
   useEffect(() => {
     if (profile) {
       form.reset({
@@ -51,12 +52,17 @@ export default function ProfilePage() {
     }
   }, [profile, form]);
 
-  const renderAvatarSrc = () => {
+  // Handle preview URL generation with memory cleanup
+  useEffect(() => {
     if (watchedImageFile instanceof File) {
-      return URL.createObjectURL(watchedImageFile);
+      const objectUrl = URL.createObjectURL(watchedImageFile);
+      setPreviewUrl(objectUrl);
+
+      return () => URL.revokeObjectURL(objectUrl);
+    } else {
+      setPreviewUrl(profile?.profile_image_url || "");
     }
-    return profile?.profile_image_url || "";
-  };
+  }, [watchedImageFile, profile]);
 
   const getInitials = () => {
     if (!profile?.name) return "U";
@@ -68,16 +74,9 @@ export default function ProfilePage() {
       .toUpperCase();
   };
 
-  const isFormUnchanged = () => {
-    const nameChanged = watchedName !== (profile?.name || "");
-    const imageChanged = watchedImageFile !== null;
-    return !nameChanged && !imageChanged;
-  };
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Manually set the file object directly into React Hook Form's engine
       form.setValue("profileImage", file, { shouldValidate: true });
     }
   };
@@ -85,43 +84,46 @@ export default function ProfilePage() {
   const onSubmitEditProfile = async (values: EditProfileFormValues) => {
     setRequestStatus({ text: "", type: null });
 
-    startTransition(async () => {
-      try {
-        await updateProfileMutation.mutateAsync({
-          name: values.name,
-          profileImage: values.profileImage,
-        });
+    try {
+      await updateProfileMutation.mutateAsync({
+        name: values.name,
+        profileImage: values.profileImage,
+      });
 
-        setRequestStatus({
-          text: "Profile updated successfully!",
-          type: "success",
-        });
+      setRequestStatus({
+        text: "Profile updated successfully!",
+        type: "success",
+      });
 
-        // Reset form states so the "Save Changes" button locks back up safely
-        form.reset({ name: values.name, profileImage: null });
-      } catch (err: any) {
-        setRequestStatus({
-          text:
-            err?.response?.data?.message ||
-            "Something went wrong updating your profile.",
-          type: "error",
-        });
+      // Clear internal form state and native file input
+      form.reset({ name: values.name, profileImage: null });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
-    });
+    } catch (err: any) {
+      setRequestStatus({
+        text:
+          err?.response?.data?.message ||
+          "Something went wrong updating your profile.",
+        type: "error",
+      });
+    }
   };
+
+  const isSubmitting = updateProfileMutation.isPending;
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmitEditProfile)}>
         <div className="w-full space-y-8">
-          {/* SECTION 1: PROFILE PICTURE*/}
+          {/* SECTION 1: PROFILE PICTURE */}
           <div className="flex flex-col gap-2">
             <h2 className="text-xl font-bold">Profile Picture</h2>
 
             <div className="group relative w-40 h-40 rounded-full ring-2 ring-border overflow-hidden bg-muted">
               <Avatar className="w-full h-full">
                 <AvatarImage
-                  src={renderAvatarSrc()}
+                  src={previewUrl}
                   alt="Profile Preview"
                   className="object-cover"
                 />
@@ -130,7 +132,6 @@ export default function ProfilePage() {
                 </AvatarFallback>
               </Avatar>
 
-              {/* Hover Overlay Button Layout */}
               <div className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
                 <label
                   htmlFor="avatar-upload"
@@ -145,8 +146,8 @@ export default function ProfilePage() {
               JPG, PNG or WebP. Max size 2MB.
             </p>
 
-            {/* Native hidden input element acting as file capture node */}
             <input
+              ref={fileInputRef}
               id="avatar-upload"
               type="file"
               onChange={handleImageChange}
@@ -154,7 +155,6 @@ export default function ProfilePage() {
               className="hidden"
             />
 
-            {/* Hidden field tracking node to output validation messages from Zod */}
             <FormField
               control={form.control}
               name="profileImage"
@@ -171,8 +171,7 @@ export default function ProfilePage() {
             <h2 className="text-xl font-bold">Change Username</h2>
 
             <p className="text-base max-w-[60ch]">
-              Don't like your username? No worries, you can absolutely change
-              it.
+              Don't like your username? No worries, you can change it here.
             </p>
 
             <FormField
@@ -183,7 +182,7 @@ export default function ProfilePage() {
                   <FormLabel>Username</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isPending}
+                      disabled={isSubmitting}
                       placeholder="Enter your username"
                       {...field}
                     />
@@ -192,14 +191,27 @@ export default function ProfilePage() {
                 </FormItem>
               )}
             />
+
+            {requestStatus.type && (
+              <Alert variant={requestStatus.type}>
+                {requestStatus.type === "success" ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <CircleX className="h-4 w-4" />
+                )}
+                <AlertDescription className="w-full">
+                  {requestStatus.text}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           <Button
             type="submit"
-            disabled={isFormUnchanged() || !form.formState.isValid}
+            disabled={isSubmitting}
             className="cursor-pointer"
           >
-            {isPending ? (
+            {isSubmitting ? (
               <>
                 <Spinner /> Saving...
               </>

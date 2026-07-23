@@ -89,6 +89,7 @@ export async function loginWithProvider(
     },
   });
   if (error) {
+    console.log(error);
     return { type: "error", text: error.message };
   }
   if (data?.url) {

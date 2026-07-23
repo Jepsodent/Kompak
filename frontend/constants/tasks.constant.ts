@@ -65,7 +65,9 @@ export const TASKS: Task[] = PROJECTS.flatMap((p) => {
     const day = 2 + (h % 24); // days in current month
     const month = 7; // August (0-indexed month = 7)
     const year = 2024;
-    const dueDate = new Date(Date.UTC(year, month, day)).toISOString().slice(0, 10);
+    const dueDate = new Date(Date.UTC(year, month, day))
+      .toISOString()
+      .slice(0, 10);
     return {
       id: `${p.id}-t${i}`,
       title,
@@ -77,3 +79,10 @@ export const TASKS: Task[] = PROJECTS.flatMap((p) => {
     };
   });
 });
+
+export const TASK_STATUSES = [
+  { id: "e152eec0-fb60-4839-ba14-427a5d503f3a", name: "To Do" },
+  { id: "18c3c0ec-8740-42a0-bb07-aee692f70f69", name: "In Progress" },
+  { id: "355bf6db-1a52-415d-987e-0a999482ae5f", name: "In Review" },
+  { id: "e6eea38c-f626-43b6-a2d2-19e1b440b6aa", name: "Done" },
+];

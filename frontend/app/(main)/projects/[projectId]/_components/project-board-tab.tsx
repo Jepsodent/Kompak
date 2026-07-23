@@ -10,8 +10,6 @@ const columns: { status: TaskStatus; label: string; accent: string }[] = [
   { status: "DONE", label: "Done", accent: "bg-emerald-500/100" },
 ];
 
-
-
 export function ProjectBoardTab({ project }: { project: Project }) {
   const tasks = TASKS.filter((t) => t.projectId === project.id);
 
@@ -20,24 +18,37 @@ export function ProjectBoardTab({ project }: { project: Project }) {
       {columns.map((col) => {
         const items = tasks.filter((t) => t.status === col.status);
         return (
-          <div key={col.status} className="bg-card rounded-2xl ring-1 ring-white/10 shadow-sm p-4 flex flex-col">
+          <div
+            key={col.status}
+            className="bg-card rounded-2xl ring-1 ring-white/10 shadow-sm p-4 flex flex-col"
+          >
             <div className="flex items-center justify-between mb-4 px-1">
               <div className="flex items-center gap-2">
                 <span className={`size-2 rounded-full ${col.accent}`} />
-                <span className="text-xs font-semibold uppercase tracking-widest">{col.label}</span>
-                <span className="text-[10px] text-muted-foreground font-mono">{items.length}</span>
+                <span className="text-xs font-semibold uppercase tracking-widest">
+                  {col.label}
+                </span>
+                <span className="text-[10px] text-muted-foreground font-mono">
+                  {items.length}
+                </span>
               </div>
-              <button className="text-muted-foreground hover:text-foreground text-lg leading-none">+</button>
+              <button className="text-muted-foreground hover:text-foreground text-lg leading-none">
+                +
+              </button>
             </div>
             <div className="space-y-2.5 flex-1">
               {items.map((t) => {
-                const assignee = project.members.find((m) => m.id === t.assigneeId);
+                const assignee = project.members.find(
+                  (m) => m.id === t.assigneeId,
+                );
                 return (
                   <div
                     key={t.id}
                     className="group p-3 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing"
                   >
-                    <p className="text-sm font-medium leading-snug mb-3">{t.title}</p>
+                    <p className="text-sm font-medium leading-snug mb-3">
+                      {t.title}
+                    </p>
                     <div className="flex items-center justify-end">
                       {assignee && (
                         <div
