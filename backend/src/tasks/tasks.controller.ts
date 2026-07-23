@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   UseGuards,
@@ -17,6 +18,9 @@ import { type User } from '@supabase/supabase-js';
 import { TasksService } from './tasks.service';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { AssignMemberTaskDto } from './dto/assign-member.dto';
+import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
+import { SubmitProofDto } from './dto/submit-proof.dto';
+import { ReviewTaskDto } from './dto/review-task.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { CreateTaskDto } from './dto/create-task.dto';
 
@@ -87,8 +91,42 @@ export class TasksController {
   async unassignMemberTask(
     @Param('projectId') projectId: string,
     @Param('taskId') taskId: string,
-    @Param('memberId') memberId: string,
+    @Param('memberId', ParseUUIDPipe) memberId: string,
   ) {
     return this.taskService.unassignMemberTask(projectId, taskId, memberId);
+  }
+
+  //update status workflow
+  @Patch(':taskId/status')
+  @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
+  async updateTaskStatus(
+    @Param('taskId') taskId: string,
+    @CurrentUser() user: User,
+    @Param('projectId') projectId: string,
+    @Body() dto: UpdateTaskStatusDto,
+  ) {
+    return this.taskService.updateTaskStatus(taskId, user.id, projectId, dto);
+  }
+
+  @Post(':taskId/proof')
+  @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
+  async submitProof(
+    @Param('taskId') taskId: string,
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+    @Body() dto: SubmitProofDto,
+  ) {
+    return this.taskService.submitProof(taskId, projectId, user.id, dto);
+  }
+
+  @Post(':taskId/review')
+  @Roles(ProjectRole.LEADER)
+  async taskReview(
+    @Param('taskId') taskId: string,
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+    @Body() dto: ReviewTaskDto,
+  ) {
+    return this.taskService.reviewTask(taskId, projectId, user.id, dto);
   }
 }

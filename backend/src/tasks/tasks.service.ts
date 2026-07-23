@@ -10,6 +10,10 @@ import { SupabaseRequestService } from 'src/supabase/supabase-request.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { AssignMemberTaskDto } from './dto/assign-member.dto';
+import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
+import { TaskStatusService } from './task-status.service';
+import { SubmitProofDto } from './dto/submit-proof.dto';
+import { ReviewTaskDto } from './dto/review-task.dto';
 
 @Injectable()
 export class TasksService implements OnModuleInit {
@@ -40,99 +44,36 @@ export class TasksService implements OnModuleInit {
     this.defaultTodoStatusId = data.id;
   }
 
-  async createTask(projectId: string, dto: CreateTaskDto, userId: string) {
-    const { assignee_ids, status_id, ...taskFields } = dto;
-
-    // CHECK 1: Is the creator a project member?
-    const { data: creatorMember, error: creatorError } =
-      await this.supabase.client
-        .from('project_members')
-        .select('id')
-        .eq('project_id', projectId)
-        .eq('profile_id', userId)
-        .eq('membership_status', 'ACTIVE')
-        .single();
-    if (creatorError || !creatorMember) {
-      throw new ForbiddenException(
-        'You are not an active member of this project',
-      );
+  async createTask(projectId: string, dto: CreateTasksDto, userId: string) {
+    const { data: member, error: memberError } = await this.supabase.client
+      .from('project_members')
+      .select('id')
+      .eq('project_id', projectId)
+      .eq('profile_id', userId)
+      .eq('membership_status', 'ACTIVE')
+      .single();
+    if (!member || memberError) {
+      throw new NotFoundException('Project member not found');
     }
-
-    // CHECK 2: Does the status_id exist?
-    const targetStatusId = status_id;
-    const { data: statusExists, error: statusError } =
-      await this.supabase.client
-        .from('task_statuses')
-        .select('id')
-        .eq('id', targetStatusId)
-        .single();
-    if (statusError || !statusExists) {
-      throw new BadRequestException('Invalid task status ID');
-    }
-
-    // CHECK 3: Are all assinee_ids valid project_members?
-    let validAssigneeMemberIds: string[] = [];
-
-    if (assignee_ids && assignee_ids.length > 0) {
-      const uniqueAssigneeIds = [...new Set(assignee_ids)];
-
-      const { data: validMembers, error: assigneeError } =
-        await this.supabase.client
-          .from('project_members')
-          .select('id')
-          .eq('project_id', projectId)
-          .in('id', uniqueAssigneeIds)
-          .eq('membership_status', 'ACTIVE');
-      if (assigneeError || !validMembers) {
-        throw new BadRequestException('Failed to validate project assignees');
-      }
-
-      validAssigneeMemberIds = validMembers.map((m) => m.id);
-    }
-
-    // INSERTION
-    const { data: createdTask, error: taskError } = await this.supabase.client
+    //ga perlu query kyk gini lagi , terapin in memory caching DP di moduleInit
+    // const {data: status, error:statusError} = await this.supabase.client.from('task_statuses').select('id').eq('code', 'TODO').single()
+    // if (!status || statusError) {
+    //     throw new InternalServerErrorException('Default task status (TODO) is missing in database');
+    // }
+    const { data, error } = await this.supabase.client
       .from('tasks')
       .insert({
-        ...taskFields,
+        ...dto,
         project_id: projectId,
-        status_id: targetStatusId,
-        created_by_member_id: creatorMember.id,
+        created_by_member_id: member.id,
+        status_id: this.defaultTodoStatusId,
       })
       .select()
       .single();
-    if (taskError || !createdTask) {
-      throw new BadRequestException(
-        'Failed to create task: ' + taskError.message,
-      );
+    if (!data || error) {
+      throw new BadRequestException('Failed to create task: ' + error.message);
     }
-
-    if (validAssigneeMemberIds.length > 0) {
-      const assigneeRows = validAssigneeMemberIds.map((memberId) => ({
-        task_id: createdTask.id,
-        project_member_id: memberId,
-      }));
-
-      const { error: assigneesInsertError } = await this.supabase.client
-        .from('task_assignees')
-        .insert(assigneeRows);
-
-      if (assigneesInsertError) {
-        await this.supabase.client
-          .from('tasks')
-          .delete()
-          .eq('id', createdTask.id);
-
-        throw new BadRequestException(
-          'Failed to assign members to task: ' + assigneesInsertError.message,
-        );
-      }
-    }
-
-    return {
-      ...createdTask,
-      assignees: validAssigneeMemberIds,
-    };
+    return data;
   }
 
   async getAllTasks(projectId: string) {
