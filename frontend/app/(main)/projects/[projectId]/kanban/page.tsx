@@ -30,9 +30,10 @@ export default function KanbanPage({ params }: KanbanPageProps) {
 
   return (
     <div className="p-8 space-y-4">
-      <CreateTaskSheet projectId={projectId} />
-
-      <h2 className="text-xl font-bold ">Kanban Board</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold ">Board</h2>
+        <CreateTaskSheet projectId={projectId} />
+      </div>
 
       <KanbanBoard
         projectId={projectId}

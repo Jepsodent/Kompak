@@ -54,8 +54,8 @@ export default function CreateTaskSheet({ projectId }: { projectId: string }) {
   const form = useForm<CreateTaskFormValues>({
     resolver: zodResolver(createTaskSchema),
     defaultValues: {
-      title: "",
-      description: "",
+      title: "Untitled Task",
+      description: "Add a detailed description...",
       dueDate: new Date(),
       statusId: TASK_STATUSES[0].id,
       assigneeIds: [],
@@ -98,128 +98,152 @@ export default function CreateTaskSheet({ projectId }: { projectId: string }) {
         render={<Button variant="secondary">Create a Task</Button>}
       />
 
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Create a Task</SheetTitle>
-          <SheetDescription>
-            Fill in the form to create a task.
-          </SheetDescription>
-        </SheetHeader>
-
+      <SheetContent
+        side="right"
+        className="px-8 py-16 w-full! sm:max-w-md! md:max-w-lg! lg:max-w-xl! xl:max-w-2xl! overflow-y-auto"
+      >
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmitCreateTask)}>
-            <div className="flex flex-col gap-2 p-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        autoFocus
-                        disabled={isPending}
-                        placeholder="Task title..."
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        value={field.value ?? ""}
-                        disabled={isPending}
-                        placeholder="Add details about this task..."
-                        className="min-h-[100px] resize-y"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Status Selection */}
-              <FormField
-                control={form.control}
-                name="statusId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
+          <form
+            onSubmit={form.handleSubmit(onSubmitCreateTask)}
+            className="flex flex-col gap-8"
+          >
+            {/* TITLE */}
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      value={field.value ?? ""}
                       disabled={isPending}
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select initial status" />
-                        </SelectTrigger>
-                      </FormControl>
+                      placeholder="Add a title"
+                      className="min-h-0 resize-y border-none shadow-none bg-card! focus-visible:ring-0 focus-visible:bg-accent/30 p-0 rounded-md text-2xl! font-bold! leading-relaxed transition-all"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                      <SelectContent>
-                        {TASK_STATUSES.map((status) => (
-                          <SelectItem key={status.id} value={status.id}>
-                            {status.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* METADATA */}
+            <div className="w-full flex flex-col items-center gap-2">
+              {/* STATUS */}
+              <div className="w-full flex justify-start items-center">
+                <span className="block w-[30%] text-muted-foreground text-sm">
+                  Status
+                </span>
 
-              {/* DateTimePicker */}
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Due Date & Time</FormLabel>
-                    <FormControl>
-                      <DateTimePicker
-                        value={field.value}
-                        onChange={field.onChange}
+                <FormField
+                  control={form.control}
+                  name="statusId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select
                         disabled={isPending}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Assignee */}
-              <FormField
-                control={form.control}
-                name="assigneeIds"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Assignees</FormLabel>
-                    <FormControl>
-                      <MultiSelectAssignees
-                        members={members}
+                        onValueChange={field.onChange}
                         value={field.value}
-                        onChange={field.onChange}
-                        disabled={isPending || isLoadingMembers}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder="Select status"
+                              className="text-sm! bg-card! m-0!"
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+
+                        <SelectContent>
+                          {TASK_STATUSES.map((status) => (
+                            <SelectItem
+                              key={status.id}
+                              value={status.id}
+                              className="text-sm!"
+                            >
+                              {status.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Assignees */}
+              <div className="w-full flex justify-start items-center">
+                <span className="block w-[30%] text-muted-foreground text-sm">
+                  Assignee
+                </span>
+
+                <FormField
+                  control={form.control}
+                  name="assigneeIds"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <MultiSelectAssignees
+                          members={members}
+                          value={field.value}
+                          onChange={field.onChange}
+                          disabled={isPending || isLoadingMembers}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Due */}
+              <div className="w-full flex justify-start items-center">
+                <span className="block w-[30%] text-muted-foreground text-sm">
+                  Due Date
+                </span>
+
+                <FormField
+                  control={form.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormControl>
+                        <DateTimePicker
+                          value={field.value}
+                          onChange={field.onChange}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
-            <SheetFooter>
+            {/* Description */}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      value={field.value ?? ""}
+                      disabled={isPending}
+                      placeholder="Add a detailed description..."
+                      className="min-h-0 resize-y border-none shadow-none bg-card! focus-visible:ring-0 focus-visible:bg-accent/30 p-0 rounded-md text-lg! leading-relaxed transition-all"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <SheetFooter className="w-full p-0!">
+              {/* Alert Status */}
               {alertMessage.type && (
                 <Alert variant={alertMessage.type}>
                   {alertMessage.type === "success" ? (

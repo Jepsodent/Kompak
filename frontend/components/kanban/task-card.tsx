@@ -8,9 +8,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { format } from "date-fns";
 import { useDeleteTask } from "@/hooks/useTask";
 
-// UI Components
 import { Button } from "../ui/button";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  MoreHorizontal,
+  Pencil,
+  PencilIcon,
+  Trash,
+  Trash2,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,9 +32,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../ui/alert-dialog";
+import { ButtonGroup } from "../ui/button-group";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "../ui/hover-card";
+import { COLUMN_STYLES } from "./kanban-color";
 
 interface TaskCardProps {
-  projectId: string; // Made required for delete mutation
+  projectId: string;
   task: Task;
   onEditTask?: (task: Task) => void;
 }
@@ -69,31 +81,37 @@ export default function TaskCard({
       <div
         ref={setNodeRef}
         style={style}
-        className="opacity-30 bg-slate-200 border-2 border-dashed border-slate-400 p-4 rounded-lg h-16"
+        className="opacity-30 bg-card-foreground rounded-lg h-16"
       />
     );
   }
 
+  const currentStyle = COLUMN_STYLES[task.status.id] || {
+    bg: "bg-card",
+    border: "border border-card-foreground/10",
+  };
+
   return (
     <>
+      {/* Task Card */}
       <div
         ref={setNodeRef}
         style={style}
         {...attributes}
         {...listeners}
         onClick={() => onEditTask?.(task)}
-        className="group relative flex flex-col p-4 ring-1 ring-foreground/10 rounded-md cursor-grab text-secondary-foreground active:cursor-grabbing hover:bg-primary hover:text-primary-foreground duration-300 transition-all"
+        className={`${currentStyle.border} flex flex-col p-3 rounded-lg cursor-grabbing ${currentStyle.bg} text-card-foreground active:cursor-grabbing hover:ring-1 duration-300 transition-all`}
       >
-        <p className="text-base font-medium">{task.title}</p>
+        <p className="text-base line-clamp-2">{task.title}</p>
 
-        <span className="text-sm text-muted-foreground block mt-1 group-hover:text-primary-foreground/80">
+        <span className="block mt-1 text-sm text-muted-foreground">
           Due {format(new Date(task.due_date), "MMM d, yyyy 'at' h:mm a")}
         </span>
 
-        {/* Footer: Assignees on Left, Options Dropdown on Right */}
+        {/* Footer */}
         <div className="flex items-center justify-between mt-4">
           {/* Assignees */}
-          <div className="flex items-center gap-1.5 overflow-hidden">
+          <div className="flex items-center gap-2 overflow-hidden">
             {task.assignees &&
               task.assignees.length > 0 &&
               task.assignees.map((assignee, idx) => {
@@ -107,54 +125,63 @@ export default function TaskCard({
                     .toUpperCase() || "?";
 
                 return (
-                  <Avatar key={idx} className="h-6 w-6">
-                    <AvatarImage
-                      src={profile?.profile_image_url || undefined}
-                    />
-                    <AvatarFallback className="text-[10px] text-foreground">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
+                  <HoverCard>
+                    <HoverCardTrigger delay={50} closeDelay={50}>
+                      <Avatar
+                        key={idx}
+                        size="default"
+                        className="border border-card-foreground/10"
+                      >
+                        <AvatarImage
+                          src={profile?.profile_image_url || undefined}
+                        />
+
+                        <AvatarFallback className="text-sm text-foreground">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                    </HoverCardTrigger>
+
+                    <HoverCardContent
+                      side="bottom"
+                      align="center"
+                      className="w-auto text-xs"
+                    >
+                      {profile.name}
+                    </HoverCardContent>
+                  </HoverCard>
                 );
               })}
           </div>
 
-          {/* Options Dropdown */}
-          <div
+          {/* Edit and Delete Buttons */}
+          <ButtonGroup
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
+            className="ml-auto"
           >
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground group-hover:text-primary-foreground hover:bg-primary-foreground/10"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">Open menu</span>
-                </Button>
-              </DropdownMenuTrigger>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onEditTask?.(task)}
+              aria-label="Edit task"
+              size="icon"
+              className="cursor-pointer"
+            >
+              <PencilIcon />
+            </Button>
 
-              <DropdownMenuContent align="end" className="w-36">
-                <DropdownMenuItem
-                  onClick={() => onEditTask?.(task)}
-                  className="cursor-pointer"
-                >
-                  <Pencil className="mr-2 h-3.5 w-3.5" />
-                  <span>Edit</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/50"
-                >
-                  <Trash2 className="mr-2 h-3.5 w-3.5" />
-                  <span>Delete</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowDeleteDialog(true)}
+              aria-label="Delete Task"
+              size="icon"
+              className="cursor-pointer"
+            >
+              <Trash />
+            </Button>
+          </ButtonGroup>
         </div>
       </div>
 
@@ -163,16 +190,22 @@ export default function TaskCard({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              task <strong className="text-foreground">"{task.title}"</strong>.
+              task from this project?
             </AlertDialogDescription>
           </AlertDialogHeader>
+
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="cursor-pointer">
+              Cancel
+            </AlertDialogCancel>
+
             <AlertDialogAction
+              disabled={deleteTaskMutation.isPending}
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="cursor-pointer"
             >
               {deleteTaskMutation.isPending ? "Deleting..." : "Delete Task"}
             </AlertDialogAction>

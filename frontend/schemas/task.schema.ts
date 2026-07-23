@@ -4,10 +4,10 @@ export const createTaskSchema = z.object({
   title: z
     .string()
     .min(1, "A title is required")
-    .max(32, "A title can't be more than 32 characters"),
+    .max(128, "A title can't be more than 32 characters"),
   description: z
     .string()
-    .max(512, "A description can't be more than 512 characters")
+    .max(1024, "A description can't be more than 512 characters")
     .nullable()
     .optional(),
   dueDate: z.date(),
