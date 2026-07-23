@@ -7,8 +7,8 @@ function formatDay(iso: string) {
 }
 
 
-export function DueSoonPanel({ date, tasks }: { date: string, tasks:DueSoonTask[] }) {
-  const items = tasks.filter((t) => t.due_date === date);
+export function DueSoonPanel({ date, tasks = [] }: { date: string, tasks?: DueSoonTask[] }) {
+  const items = tasks.filter((t) => t.due_date && t.due_date.slice(0, 10) === date);
 
   return (
     <div className="bg-card p-6 rounded-2xl ring-1 ring-white/10 shadow-sm space-y-4 h-full flex flex-col">

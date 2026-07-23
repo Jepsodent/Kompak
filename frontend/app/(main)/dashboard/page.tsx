@@ -139,6 +139,7 @@ export default function DashboardPage() {
           <DashboardCalendar
             selectedDate={selectedDate}
             onSelect={setSelectedDate}
+            tasks={data.tasks_due_soon}
           />
         </div>
         <div>

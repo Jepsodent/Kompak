@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   UseGuards,
@@ -17,8 +16,6 @@ import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { type User } from '@supabase/supabase-js';
 import { TasksService } from './tasks.service';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { AssignMemberTaskDto } from './dto/assign-member.dto';
-import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { SubmitProofDto } from './dto/submit-proof.dto';
 import { ReviewTaskDto } from './dto/review-task.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
@@ -55,16 +52,14 @@ export class TasksController {
     return this.taskService.getTaskById(projectId, taskId);
   }
 
-  //   only core tasks update: description , title , and due date
   @Patch(':taskId')
   @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
   async updateTask(
     @Param('projectId') projectId: string,
     @Param('taskId') taskId: string,
     @Body() dto: UpdateTaskDto,
-    @CurrentUser() user: User,
   ) {
-    return this.taskService.updateTask(projectId, taskId, dto, user.id);
+    return this.taskService.updateTask(projectId, taskId, dto);
   }
 
   @Delete(':taskId')
@@ -74,38 +69,6 @@ export class TasksController {
     @Param('taskId') taskId: string,
   ) {
     return this.taskService.deleteTask(projectId, taskId);
-  }
-
-  @Post(':taskId/assign')
-  @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
-  async assignMemberTask(
-    @Param('projectId') projectId: string,
-    @Param('taskId') taskId: string,
-    @Body() dto: AssignMemberTaskDto,
-  ) {
-    return this.taskService.assignMemberTask(projectId, taskId, dto);
-  }
-
-  @Delete(':taskId/assign/:memberId')
-  @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
-  async unassignMemberTask(
-    @Param('projectId') projectId: string,
-    @Param('taskId') taskId: string,
-    @Param('memberId', ParseUUIDPipe) memberId: string,
-  ) {
-    return this.taskService.unassignMemberTask(projectId, taskId, memberId);
-  }
-
-  //update status workflow
-  @Patch(':taskId/status')
-  @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
-  async updateTaskStatus(
-    @Param('taskId') taskId: string,
-    @CurrentUser() user: User,
-    @Param('projectId') projectId: string,
-    @Body() dto: UpdateTaskStatusDto,
-  ) {
-    return this.taskService.updateTaskStatus(taskId, user.id, projectId, dto);
   }
 
   @Post(':taskId/proof')
