@@ -5,40 +5,45 @@ import { useParams } from "next/navigation";
 import { Share2 } from "lucide-react";
 import { ShareDialog } from "@/components/common/share-dialog";
 import { ProjectSummaryTab } from "./_components/project-summary-tab";
-import { ProjectBoardTab } from "./_components/project-board-tab";
 import { ProjectListTab } from "./_components/project-list-tab";
 import { EditableText } from "@/components/common/editable-text";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { getInitials } from "@/lib/utils";
+import { ProjectBoardTab } from "./_components/project-board-tab";
 
 type Tab = "summary" | "board" | "list";
 
 export default function ProjectPage() {
-  const params = useParams<{ projectId: string }>();  
+  const params = useParams<{ projectId: string }>();
   const [tab, setTab] = useState<Tab>("summary");
   const [shareOpen, setShareOpen] = useState(false);
 
-  const {project ,members,dashboard, isLoading, updateProject} = useProjectDetails(params.projectId);
-  // console.log(project)
-  // console.log(dashboard)
+  const { project, members, dashboard, isLoading, updateProject } =
+    useProjectDetails(params.projectId);
 
-  if(isLoading){
-    return <div className="p-12 text-center text-muted-foreground h-[calc(100vh-64px)] flex items-center justify-center">Loading project...</div>;
+  if (isLoading) {
+    return (
+      <div className="p-12 text-center text-muted-foreground h-[calc(100vh-64px)] flex items-center justify-center">
+        Loading project...
+      </div>
+    );
   }
   if (!project) {
     return (
       <div className="p-12 text-center h-[calc(100vh-64px)] flex flex-col items-center justify-center">
         <h1 className="text-2xl font-display font-bold">Project not found</h1>
-        <p className="text-sm text-muted-foreground mt-2">It may have been archived or renamed.</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          It may have been archived or renamed.
+        </p>
       </div>
     );
   }
 
   const handleSaveName = (newName: string) => {
-    if(newName !== project.title){
-      updateProject({title:newName})
+    if (newName !== project.title) {
+      updateProject({ title: newName });
     }
-  }
+  };
 
   return (
     <div className="p-6 md:p-8 max-w-[1800px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -66,7 +71,11 @@ export default function ProjectPage() {
                   title={m.profiles.name}
                 >
                   {m.profiles.profile_image_url ? (
-                    <img src={m.profiles.profile_image_url} alt={m.profiles.name} className="w-full h-full object-cover"/>
+                    <img
+                      src={m.profiles.profile_image_url}
+                      alt={m.profiles.name}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     getInitials(m.profiles.name)
                   )}
@@ -115,12 +124,26 @@ export default function ProjectPage() {
       </div>
 
       <div className="min-h-[500px]">
-        {tab === "summary" && <ProjectSummaryTab project={project} onUpdate = {updateProject} stats={dashboard?.stats} quickLinks={dashboard?.quick_links || []}/>}
-        {/* {tab === "board" && <ProjectBoardTab project={project} />} */}
-        {tab === "list" && <ProjectListTab project={project} members={members} />}
+        {tab === "summary" && (
+          <ProjectSummaryTab
+            project={project}
+            onUpdate={updateProject}
+            stats={dashboard?.stats}
+            quickLinks={dashboard?.quick_links || []}
+          />
+        )}
+        {tab === "board" && <ProjectBoardTab project={project} />}
+        {tab === "list" && (
+          <ProjectListTab project={project} members={members} />
+        )}
       </div>
 
-      <ShareDialog open={shareOpen} onOpenChange={setShareOpen} projectName={project.title} projectId={project.id} />
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        projectName={project.title}
+        projectId={project.id}
+      />
     </div>
   );
 }

@@ -6,43 +6,45 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api')
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true, //auto transorm payload jadi instance dto class
-    transformOptions: {
-      enableImplicitConversion: true, //auto convert string -> number
-    }
-  }))
-  app.useGlobalInterceptors(new TransformInterceptor())
+  app.setGlobalPrefix('api');
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true, //auto transorm payload jadi instance dto class
+      transformOptions: {
+        enableImplicitConversion: true, //auto convert string -> number
+      },
+    }),
+  );
+  app.useGlobalInterceptors(new TransformInterceptor());
   const config = new DocumentBuilder()
-  .setTitle('Kompak API')
-  .setDescription('API Documentation')
-  .setVersion('1.0')
-  .addBearerAuth(
-    {
-      type: 'http',
-      scheme: 'bearer',
-      bearerFormat: 'JWT',
-      name: 'JWT',
-      in: 'header',
-      description: 'Input jwt'
-    },
-    'access-token',
-  ).build()
-  const document =  SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/api/docs',app,document, {
+    .setTitle('Kompak API')
+    .setDescription('API Documentation')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        in: 'header',
+        description: 'Input jwt',
+      },
+      'access-token',
+    )
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('/api/docs', app, document, {
     swaggerOptions: {
-      persistAuthorization: true
-    }
-  })
+      persistAuthorization: true,
+    },
+  });
 
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials:true,
-  })
-
+    credentials: true,
+  });
 
   await app.listen(process.env.PORT ?? 3000);
 }
