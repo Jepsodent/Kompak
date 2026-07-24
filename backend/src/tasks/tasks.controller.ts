@@ -20,6 +20,7 @@ import { SubmitProofDto } from './dto/submit-proof.dto';
 import { ReviewTaskDto } from './dto/review-task.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { BulkCreateTaskDto } from './dto/bulk-create-task.dto';
 
 @Controller('projects/:projectId/tasks')
 @ApiBearerAuth('access-token')
@@ -92,4 +93,19 @@ export class TasksController {
   ) {
     return this.taskService.reviewTask(taskId, projectId, user.id, dto);
   }
+
+  @Post('generate-ai')
+  @Roles(ProjectRole.LEADER)
+  async generateTasksFromAI(
+     @Param('projectId') projectId:string
+  ){
+    return this.taskService.generateTasksFromAI(projectId)
+  }
+
+  @Post('/bulk')
+  @Roles(ProjectRole.LEADER, ProjectRole.MEMBER)
+  async createBulkTask(@Param('projectId') projectId: string, @CurrentUser() user:User, @Body() dto:BulkCreateTaskDto){
+    return this.taskService.createBulkTask(projectId, dto, user.id)
+  }
+
 }
