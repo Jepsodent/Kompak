@@ -6,8 +6,6 @@ import { ProjectsModule } from './projects/projects.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import * as Joi from 'joi';
 import { ProfileModule } from './profile/profile.module';
-import { TasksService } from './tasks/tasks.service';
-import { TasksController } from './tasks/tasks.controller';
 import { TasksModule } from './tasks/tasks.module';
 @Module({
   imports: [
@@ -22,6 +20,7 @@ import { TasksModule } from './tasks/tasks.module';
         INV_JWT_EXPIRES_IN: Joi.string().required(),
         PORT: Joi.number().default(3001),
         FRONTEND_URL: Joi.string().default('http://localhost:3001'),
+        GEMINI_API_KEY: Joi.string().required(),
         //nanti lagi kalo ada yg wajib
       }),
     }),
@@ -31,7 +30,7 @@ import { TasksModule } from './tasks/tasks.module';
     ProfileModule,
     TasksModule,
   ],
-  controllers: [AppController, TasksController],
-  providers: [TasksService],
+  controllers: [AppController],
+  providers: [],
 })
 export class AppModule {}
