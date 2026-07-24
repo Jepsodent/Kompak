@@ -10,6 +10,8 @@ import { TaskStatusService } from './task-status.service';
 import { SubmitProofDto } from './dto/submit-proof.dto';
 import { ReviewTaskDto } from './dto/review-task.dto';
 import { TASK_STATUS_CODES } from 'src/common/enums/task-status.enum';
+import { AiService } from 'src/ai/ai.service';
+import { BulkCreateTaskDto } from './dto/bulk-create-task.dto';
 /* 
 Not best practice approaches bcs: 
 1. Concurrency Risk: Jika user A mengubah judul task , dan di detik yang sama User B tugasin orang baru pada task yang sama , salah satu request akan menimpa data request lainnya karena keduanya mengirim array assignee_ids penuh. 
@@ -38,6 +40,7 @@ export class TasksService{
   constructor(
     private readonly supabase: SupabaseRequestService,
     private readonly taskStatus: TaskStatusService,
+    private readonly ai: AiService,
   ) {}
 
   async createTask(projectId: string, dto: CreateTaskDto, userId: string) {
@@ -526,5 +529,65 @@ export class TasksService{
           ? 'approved and moved to Done'
           : 'rejected and moved to In Progress'),
     };
+  }
+
+  // ai task recommendation
+  async generateTasksFromAI(projectId:string){
+    const {data:description, error:descriptionError} = await this.supabase.client.from('projects').select('background,objective,method').eq('id',projectId).single()
+    if(!description|| descriptionError ) throw new BadRequestException('Failed to load project description: '+descriptionError.message)
+    
+    const {background, method, objective} = description
+    if(!background?.trim() && !objective?.trim() && !method?.trim()){
+      throw new BadRequestException(
+        'At least one section (background, objective, ormethod) must be provided to generate AI tasks.'
+      )
+    }
+
+    const text = `INFORMASI PROJECT: 
+  - Background: ${background || 'tidak ada background'}\n
+  - Objective: ${objective || 'tidak ada objective'}\n
+  - Method: ${method || 'tidak ada method'}\n`.trim()
+    const response =  await this.ai.generateasks(text)    
+    return response
+  }
+
+  async createBulkTask(projectId:string, dto: BulkCreateTaskDto, userId:string){
+    const creatorMember = await this.checkValidMember(userId, projectId)
+    const {tasks} = dto
+    const targetStatusId = this.taskStatus.getStatusId('TODO');
+
+
+    const allAssigneeIds = [...new Set(tasks.flatMap((t) => t.assignee_ids || []))];
+
+    if (allAssigneeIds.length > 0){
+      await this.validateProjectMembers(allAssigneeIds, projectId)
+    }
+
+    const mappedTasks = tasks.map((t) => ({
+      title: t.title,
+      description : t.description,
+      due_date : t.due_date,
+      created_by_member_id: creatorMember.id,
+      status_id: targetStatusId,
+      project_id: projectId,
+      source : "AI"
+    }))
+
+    
+
+    const{data:datas, error} = await this.supabase.client.from('tasks').insert(mappedTasks).select()
+    if(!datas || error) throw new BadRequestException('Failed to bulk insert tasks: '+error.message)
+    
+    const syncPromises = datas.map((newTask, index) => {
+      const taskDto = tasks[index]
+      if(taskDto.assignee_ids && taskDto.assignee_ids.length > 0){
+        return this.syncAssignees(newTask.id, projectId, taskDto.assignee_ids)
+      }
+      return Promise.resolve()
+    })
+    await Promise.all(syncPromises)
+
+    
+    return {message: "Successfully bulk insert task!"}
   }
 }
