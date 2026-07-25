@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { TaskReviewEvent } from './events/task-review.event';
 import { ProofSubmittedEvent } from './events/proof-submitted.event';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class NotificationsService {
@@ -61,7 +62,7 @@ export class NotificationsService {
 
     async getUserNotifications(userId:string){
 
-        const {data, error}  = await this.supabase.client.from('notifications').select('*').eq('profile_id',userId).order('created_at', {ascending: false})
+        const {data, error}  = await this.supabase.client.from('notifications').select('*,tasks(project_id)').eq('profile_id',userId).order('created_at', {ascending: false})
 
         if(error) throw new BadRequestException('Failed to fetch notifications: '+error.message)
         return data
@@ -76,5 +77,83 @@ export class NotificationsService {
 
         return {message: 'Notification marked as read'}
     }
+
+    @Cron(CronExpression.EVERY_DAY_AT_8AM)
+    async handleDeadlineReminder(){
+        try {
+            
+            const now = new Date()
+            const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+            // dl H-3 (tanggal x jam 23:59:59 malam)
+            const threeDaysFromNow = new Date(todayMidnight)
+            threeDaysFromNow.setDate(now.getDate() + 3)
+            threeDaysFromNow.setHours(23,59,59,999)
+
+            const {data:upcomingTask} = await this.supabase.client.from('tasks').select(
+                `id,
+                title,
+                project_id,
+                due_date, 
+                status: task_statuses!inner(code),
+                project: projects!inner(
+                    members: project_members!inner(profile_id, membership_status)
+                )`)
+                .neq('status.code', 'DONE')
+                .eq('project.members.membership_status','ACTIVE')
+                .gte('due_date', now.toISOString())
+                .lte('due_date', threeDaysFromNow.toISOString())
+            
+            if(!upcomingTask || upcomingTask.length === 0) return;
+            const notificationRows: any[] = []
+    
+            for (const task of upcomingTask){
+                if(!task.due_date) continue;
+    
+                const dueDate = new Date(task.due_date)
+                const dueMidnight = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate())
+
+                const diffInTime =  dueMidnight.getTime() - todayMidnight.getTime()
+                const diffInDays= Math.round(diffInTime / (1000 * 3600 * 24))
+    
+                let title = ''
+                let message = ''
+    
+                if (diffInDays === 3){
+                    title = 'Reminder Deadline (H-3)';
+                    message = `Reminder: Task "${task.title}" is due in 3 days!`;
+                }
+                else if (diffInDays === 2){
+                    title = 'Reminder Deadline (H-2)'
+                    message = `Reminder: Task "${task.title}" is due in 2 days!`;
+                    
+                }
+                else if (diffInDays <= 1){
+                    title = 'Reminder Deadline (H-1)'
+                    message = `Reminder: Task "${task.title}" is due tomorrow!`;
+                } else{
+                    continue
+                }
+    
+                for (const member of task.project?.members || []){
+                    if(member.profile_id){
+                        notificationRows.push({
+                            profile_id: member.profile_id,
+                            task_id: task.id,
+                            title,
+                            message, 
+                            channel: 'IN_APP',
+                            is_read: false,
+                        })
+                    }
+                }
+            }
+            if(notificationRows.length > 0){
+                await this.supabase.client.from('notifications').insert(notificationRows)
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    } 
+
 
 }

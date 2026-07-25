@@ -9,6 +9,7 @@ import { ProfileModule } from './profile/profile.module';
 import { TasksModule } from './tasks/tasks.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { NotificationsModule } from './notifications/notifications.module';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -29,6 +30,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     EventEmitterModule.forRoot({
       global: true
     }),
+    ScheduleModule.forRoot(),
     SupabaseModule,
     ProjectsModule,
     DashboardModule,

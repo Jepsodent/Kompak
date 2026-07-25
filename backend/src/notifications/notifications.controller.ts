@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { type User } from '@supabase/supabase-js';
@@ -16,10 +16,14 @@ export class NotificationsController {
         return this.notificationService.getUserNotifications(user.id)
     }
 
-    @Post(':notificationId')
+    @Patch(':notificationId')
     async markReadNotification(@CurrentUser() user:User, @Param('notificationId', ParseUUIDPipe) notificationId:string){
         return this.notificationService.markAsRead(user.id, notificationId) 
     }
 
+    @Post('test-cron')
+    async testCronJob(){
+        return this.notificationService.handleDeadlineReminder()
+    }
 
 }
