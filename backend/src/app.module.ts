@@ -7,6 +7,9 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import * as Joi from 'joi';
 import { ProfileModule } from './profile/profile.module';
 import { TasksModule } from './tasks/tasks.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,11 +27,16 @@ import { TasksModule } from './tasks/tasks.module';
         //nanti lagi kalo ada yg wajib
       }),
     }),
+    EventEmitterModule.forRoot({
+      global: true
+    }),
+    ScheduleModule.forRoot(),
     SupabaseModule,
     ProjectsModule,
     DashboardModule,
     ProfileModule,
     TasksModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [],
