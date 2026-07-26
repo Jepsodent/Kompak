@@ -10,6 +10,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ReportsModule } from './reports/reports.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -37,6 +38,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ProfileModule,
     TasksModule,
     NotificationsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [],
