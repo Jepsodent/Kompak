@@ -41,3 +41,9 @@ export interface UpdateTaskPayload {
   status_id?: string;
   assignee_ids?: string[] | null;
 }
+
+export type GeneratedTask = {
+  title: string;
+  description: string;
+  recommendation_role: string;
+};

@@ -26,10 +26,9 @@ export default function KanbanPage({ params }: KanbanPageProps) {
 
   if (isLoading) return <p className="p-8">Loading tasks...</p>;
   if (isError) return <p className="p-8 text-red-500">Failed to load tasks.</p>;
-  console.log(tasks);
 
   return (
-    <div className="p-8 space-y-4">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold ">Board</h2>
         <CreateTaskSheet projectId={projectId} />

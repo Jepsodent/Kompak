@@ -1,26 +1,25 @@
-import { AppSidebar } from "@/components/common/app-sidebar";
-import { TopHeader } from "@/components/common/top-header";
-import { Toaster } from "@/components/ui/sonner";
+"use client";
 
-export default function MainLayout({
-  children,
-}: {
+import { SidebarProvider } from "@/components/ui/sidebar";
+import MainSidebar from "@/components/common/main-sidebar";
+import MainTopbar from "@/components/common/main-topbar";
+
+type MainLayoutProps = {
   children: React.ReactNode;
-}) {
+};
+
+export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden">
-      {/* Sidebar nongkrong di kiri */}
-      <AppSidebar />
-      
-      {/* Wrapper konten utama di kanan */}
-      <div className="flex-1 flex flex-col min-w-0 h-full">
-        <TopHeader />
-        <main className="flex-1 overflow-y-auto relative">
-          {children}
-        </main>
+    <SidebarProvider>
+      <div className="flex w-full min-h-screen">
+        <MainSidebar />
+
+        <div className="min-w-0 flex flex-1 flex-col">
+          <MainTopbar />
+
+          <div className="flex-1 w-full">{children}</div>
+        </div>
       </div>
-      
-      <Toaster />
-    </div>
+    </SidebarProvider>
   );
 }
