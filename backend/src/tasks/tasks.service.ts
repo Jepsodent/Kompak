@@ -12,6 +12,9 @@ import { ReviewTaskDto } from './dto/review-task.dto';
 import { TASK_STATUS_CODES } from 'src/common/enums/task-status.enum';
 import { AiService } from 'src/ai/ai.service';
 import { BulkCreateTaskDto } from './dto/bulk-create-task.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { TaskReviewEvent } from 'src/notifications/events/task-review.event';
+import { ProofSubmittedEvent } from 'src/notifications/events/proof-submitted.event';
 /* 
 Not best practice approaches bcs: 
 1. Concurrency Risk: Jika user A mengubah judul task , dan di detik yang sama User B tugasin orang baru pada task yang sama , salah satu request akan menimpa data request lainnya karena keduanya mengirim array assignee_ids penuh. 
@@ -41,6 +44,7 @@ export class TasksService{
     private readonly supabase: SupabaseRequestService,
     private readonly taskStatus: TaskStatusService,
     private readonly ai: AiService,
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
   async createTask(projectId: string, dto: CreateTaskDto, userId: string) {
@@ -396,6 +400,7 @@ export class TasksService{
       .from('tasks')
       .select(
         `
+            title,
             task_statuses(code)`,
       )
       .eq('id', taskId)
@@ -437,7 +442,11 @@ export class TasksService{
         summary_notes: dto.summary_notes,
         submitted_by_member_id: member.id,
       })
-      .select('id')
+      .select(`id, 
+          project_members(
+            profiles(name)
+          )
+        `)
       .single();
     if (!proof || proofError)
       throw new BadRequestException(
@@ -459,6 +468,21 @@ export class TasksService{
         );
       }
     }
+    console.log('>>> [1] AKAN MEMANCARKAN EVENT PROOF-SUBMITTED <<<');
+    console.log('LISTENER YANG TERDAFTAR:', this.eventEmitter.eventNames());
+    console.log('JUMLAH LISTENER PROOF-SUBMITTED:', this.eventEmitter.listeners('proof-submitted').length);
+
+    this.eventEmitter.emit(
+      'proof-submitted',
+      new ProofSubmittedEvent(
+        taskId,
+        projectId,
+        status.title,
+        proof.project_members?.profiles?.name ?? 'Guest',
+      )
+    )
+
+
     return { message: 'Proof of work submitted successfully' };
   }
 
@@ -472,6 +496,7 @@ export class TasksService{
       .from('tasks')
       .select(
         `
+            title,
             task_statuses(code)`,
       )
       .eq('id', taskId)
@@ -486,7 +511,9 @@ export class TasksService{
     const member = await this.checkValidMember(userId, projectId);
     const { data: latestProof, error: proofError } = await this.supabase.client
       .from('proof_of_works')
-      .select('id')
+      .select(`id, 
+              submitted_by: project_members(profile_id)
+        `)
       .eq('task_id', taskId)
       .order('submitted_at', { ascending: false })
       .limit(1)
@@ -521,6 +548,18 @@ export class TasksService{
       throw new BadRequestException(
         'Failed to update task status after review: ' + updateTaskError.message,
       );
+
+    this.eventEmitter.emit(
+      'task-reviewed',
+      new TaskReviewEvent(
+        taskId,
+        projectId,
+        status.title,
+        latestProof.submitted_by?.profile_id ?? '',
+        dto.action,
+        data.feedback ?? 'No feedback provided'
+      )
+    )
 
     return {
       message:
