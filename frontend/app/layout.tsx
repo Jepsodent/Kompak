@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import QueryProvider from "@/providers/query-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toast";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -49,10 +50,12 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
-          </ThemeProvider>
+            <TooltipProvider>
+              {children}
 
-          <Toaster />
+              <Toaster />
+            </TooltipProvider>
+          </ThemeProvider>
         </QueryProvider>
       </body>
     </html>

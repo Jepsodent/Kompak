@@ -6,6 +6,7 @@ import {
 import TaskCard from "./task-card";
 import { Task } from "@/types/task.type";
 import { COLUMN_STYLES } from "./kanban-color";
+import { Dispatch, SetStateAction } from "react";
 
 interface KanbanColumnProps {
   projectId: string;
@@ -13,6 +14,13 @@ interface KanbanColumnProps {
   title: string;
   tasks: Task[];
   onEditTask?: (task: Task) => void;
+
+  selectedTaskId: string | null;
+  setSelectedTaskId: Dispatch<SetStateAction<string | null>>;
+  isEditTaskDialog: boolean;
+  setIsEditTaskDialog: Dispatch<SetStateAction<boolean>>;
+  isDeleteTaskDialogOpen: boolean;
+  setIsDeleteTaskDialogOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function KanbanColumn({
@@ -21,6 +29,12 @@ export default function KanbanColumn({
   title,
   tasks,
   onEditTask,
+  selectedTaskId,
+  setSelectedTaskId,
+  isEditTaskDialog,
+  setIsEditTaskDialog,
+  isDeleteTaskDialogOpen,
+  setIsDeleteTaskDialogOpen,
 }: KanbanColumnProps) {
   const { setNodeRef } = useDroppable({ id });
   const taskIds = tasks.map((t) => t.id);
@@ -50,7 +64,12 @@ export default function KanbanColumn({
               projectId={projectId}
               key={task.id}
               task={task}
-              onEditTask={onEditTask}
+              selectedTaskId={selectedTaskId}
+              setSelectedTaskId={setSelectedTaskId}
+              isEditTaskDialog={isEditTaskDialog}
+              setIsEditTaskDialog={setIsEditTaskDialog}
+              isDeleteTaskDialogOpen={isDeleteTaskDialogOpen}
+              setIsDeleteTaskDialogOpen={setIsDeleteTaskDialogOpen}
             />
           ))}
         </div>

@@ -5,7 +5,7 @@ import { CreateTaskFormValues, createTaskSchema } from "@/schemas/task.schema";
 import { StatusMessage } from "@/types/auth.type";
 import { Task } from "@/types/task.type";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   Sheet,
@@ -23,7 +23,6 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import {
   Select,
@@ -41,16 +40,18 @@ import { Spinner } from "../ui/spinner";
 
 interface EdiTaskSheetProps {
   projectId: string;
-  taskId: string | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  selectedTaskId: string | null;
+  setSelectedTaskId: Dispatch<SetStateAction<string | null>>;
+  isEditTaskSheetOpen?: boolean;
+  setIsEditTaskSheetOpen?: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function EditTaskSheet({
   projectId,
-  taskId,
-  open,
-  onOpenChange,
+  selectedTaskId,
+  setSelectedTaskId,
+  isEditTaskSheetOpen,
+  setIsEditTaskSheetOpen,
 }: EdiTaskSheetProps) {
   const [alertMessage, setAlertMessage] = useState<StatusMessage>({
     type: null,
@@ -60,7 +61,7 @@ export default function EditTaskSheet({
   const { members, isLoading: isLoadingMembers } = useProjectDetails(projectId);
   const { data: task, isLoading: isLoadingTask } = useTaskDetail(
     projectId,
-    taskId || undefined,
+    selectedTaskId!,
   );
   const updateTaskMutation = useUpdateTask(projectId);
   const isPending = updateTaskMutation.isPending;
@@ -117,7 +118,7 @@ export default function EditTaskSheet({
       });
 
       setTimeout(() => {
-        onOpenChange(false);
+        setIsEditTaskSheetOpen!(false);
       }, 500);
     } catch (err: any) {
       setAlertMessage({
@@ -127,8 +128,18 @@ export default function EditTaskSheet({
     }
   };
 
+  const handleClose = (open: boolean) => {
+    if (setIsEditTaskSheetOpen) {
+      setIsEditTaskSheetOpen(open);
+    }
+
+    if (!open) {
+      setSelectedTaskId(null);
+    }
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={isEditTaskSheetOpen} onOpenChange={handleClose}>
       <SheetContent
         side="right"
         className="px-8 py-16 w-full! sm:max-w-md! md:max-w-lg! lg:max-w-xl! xl:max-w-2xl! overflow-y-auto"

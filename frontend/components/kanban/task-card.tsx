@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { Task } from "@/types/task.type";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -39,21 +39,27 @@ import {
   HoverCardTrigger,
 } from "../ui/hover-card";
 import { COLUMN_STYLES } from "./kanban-color";
+import { toast } from "../ui/toast";
+import { cn } from "@/lib/utils";
 
 interface TaskCardProps {
-  projectId: string;
   task: Task;
-  onEditTask?: (task: Task) => void;
+  projectId: string;
+  selectedTaskId: string | null;
+  setSelectedTaskId: Dispatch<SetStateAction<string | null>>;
+  isEditTaskDialog: boolean;
+  setIsEditTaskDialog: Dispatch<SetStateAction<boolean>>;
+  isDeleteTaskDialogOpen: boolean;
+  setIsDeleteTaskDialogOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function TaskCard({
-  projectId,
   task,
-  onEditTask,
+  selectedTaskId,
+  setSelectedTaskId,
+  setIsEditTaskDialog,
+  setIsDeleteTaskDialogOpen,
 }: TaskCardProps) {
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const deleteTaskMutation = useDeleteTask(projectId);
-
   const {
     attributes,
     listeners,
@@ -68,14 +74,6 @@ export default function TaskCard({
     transition,
   };
 
-  const handleDelete = async () => {
-    try {
-      await deleteTaskMutation.mutateAsync(task.id);
-    } catch (error) {
-      console.error("Failed to delete task", error);
-    }
-  };
-
   if (isDragging) {
     return (
       <div
@@ -86,132 +84,109 @@ export default function TaskCard({
     );
   }
 
-  const currentStyle = COLUMN_STYLES[task.status.id] || {
-    bg: "bg-card",
-    border: "border border-card-foreground/10",
-  };
+  const currentStyle = COLUMN_STYLES[task.status.id];
+
+  const isActive = selectedTaskId === task.id;
 
   return (
-    <>
-      {/* Task Card */}
-      <div
-        ref={setNodeRef}
-        style={style}
-        {...attributes}
-        {...listeners}
-        onClick={() => onEditTask?.(task)}
-        className={`${currentStyle.border} flex flex-col p-3 rounded-lg cursor-grabbing ${currentStyle.bg} text-card-foreground active:cursor-grabbing hover:ring-1 duration-300 transition-all`}
-      >
-        <p className="text-base line-clamp-2">{task.title}</p>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={cn(
+        `${currentStyle.border} flex flex-col p-3 rounded-lg cursor-grabbing ${currentStyle.bg} text-card-foreground active:cursor-grabbing duration-300 transition-all`,
+        `${currentStyle.hover}`,
+        isActive && "ring-1 ring-foreground",
+      )}
+    >
+      <p className="text-base line-clamp-2">{task.title}</p>
 
-        <span className="block mt-1 text-sm text-muted-foreground">
-          Due {format(new Date(task.due_date), "MMM d, yyyy 'at' h:mm a")}
-        </span>
+      <span className="block mt-1 text-sm text-muted-foreground">
+        Due {format(new Date(task.due_date), "MMM d, yyyy 'at' h:mm a")}
+      </span>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between mt-4">
-          {/* Assignees */}
-          <div className="flex items-center gap-2 overflow-hidden">
-            {task.assignees &&
-              task.assignees.length > 0 &&
-              task.assignees.map((assignee, idx) => {
-                const profile = assignee.member?.profile;
-                const initials =
-                  profile?.name
-                    ?.split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .substring(0, 2)
-                    .toUpperCase() || "?";
+      {/* Footer */}
+      <div className="flex items-center justify-between mt-4">
+        {/* Assignees */}
+        <div className="flex items-center gap-2 overflow-hidden">
+          {task.assignees &&
+            task.assignees.length > 0 &&
+            task.assignees.map((assignee, idx) => {
+              const profile = assignee.member?.profile;
+              const initials =
+                profile?.name
+                  ?.split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                  .toUpperCase() || "?";
 
-                return (
-                  <HoverCard>
-                    <HoverCardTrigger delay={50} closeDelay={50}>
-                      <Avatar
-                        key={idx}
-                        size="default"
-                        className="border border-card-foreground/10"
-                      >
-                        <AvatarImage
-                          src={profile?.profile_image_url || undefined}
-                        />
-
-                        <AvatarFallback className="text-sm text-foreground">
-                          {initials}
-                        </AvatarFallback>
-                      </Avatar>
-                    </HoverCardTrigger>
-
-                    <HoverCardContent
-                      side="bottom"
-                      align="center"
-                      className="w-auto text-xs"
+              return (
+                <HoverCard>
+                  <HoverCardTrigger delay={50} closeDelay={50}>
+                    <Avatar
+                      key={idx}
+                      size="default"
+                      className="border border-card-foreground/10"
                     >
-                      {profile.name}
-                    </HoverCardContent>
-                  </HoverCard>
-                );
-              })}
-          </div>
+                      <AvatarImage
+                        src={profile?.profile_image_url || undefined}
+                      />
 
-          {/* Edit and Delete Buttons */}
-          <ButtonGroup
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="ml-auto"
-          >
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onEditTask?.(task)}
-              aria-label="Edit task"
-              size="icon"
-              className="cursor-pointer"
-            >
-              <PencilIcon />
-            </Button>
+                      <AvatarFallback className="text-sm text-foreground">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                  </HoverCardTrigger>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowDeleteDialog(true)}
-              aria-label="Delete Task"
-              size="icon"
-              className="cursor-pointer"
-            >
-              <Trash />
-            </Button>
-          </ButtonGroup>
+                  <HoverCardContent
+                    side="bottom"
+                    align="center"
+                    className="w-auto text-xs"
+                  >
+                    {profile.name}
+                  </HoverCardContent>
+                </HoverCard>
+              );
+            })}
         </div>
+
+        {/* Edit and Delete Buttons */}
+        <ButtonGroup
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="ml-auto"
+        >
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setSelectedTaskId(task.id);
+              setIsEditTaskDialog(true);
+            }}
+            aria-label="Edit task"
+            size="icon"
+            className="cursor-pointer"
+          >
+            <PencilIcon />
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setSelectedTaskId(task.id);
+              setIsDeleteTaskDialogOpen(true);
+            }}
+            aria-label="Delete Task"
+            size="icon"
+            className="cursor-pointer"
+          >
+            <Trash />
+          </Button>
+        </ButtonGroup>
       </div>
-
-      {/* Delete Confirmation Alert Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              task from this project?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel className="cursor-pointer">
-              Cancel
-            </AlertDialogCancel>
-
-            <AlertDialogAction
-              disabled={deleteTaskMutation.isPending}
-              onClick={handleDelete}
-              className="cursor-pointer"
-            >
-              {deleteTaskMutation.isPending ? "Deleting..." : "Delete Task"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    </div>
   );
 }

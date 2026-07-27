@@ -135,7 +135,7 @@
   --in-progress: oklch(0.588 0.214 259.815);
   --in-progress-foreground: oklch(0.985 0 0);
   --in-review: oklch(0.72 0.188 70.08);
-  --in-review-foreground: oklch(0.18 0.03 50);
+  --in-review-foreground: oklch(0.985 0 0);
   --done: oklch(0.58 0.194 149.214);
   --done-foreground: oklch(0.985 0 0);
 }

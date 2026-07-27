@@ -11,6 +11,7 @@ import {
 export class CreateTaskDto {
   @ApiProperty()
   @IsString()
+  @IsOptional()
   @IsNotEmpty({ message: 'Title should not be empty' })
   title!: string;
 
@@ -25,6 +26,7 @@ export class CreateTaskDto {
     { message: 'due_date must be a valid ISO 8601 date string' },
   )
   @IsNotEmpty({ message: 'Due date should not be empty' })
+  @IsOptional()
   due_date!: string;
 
   @ApiProperty()

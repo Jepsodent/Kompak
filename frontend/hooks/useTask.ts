@@ -1,5 +1,9 @@
 import { TaskService } from "@/lib/api/task.api";
-import { CreateTaskPayload, UpdateTaskPayload } from "@/types/task.type";
+import {
+  BulkTaskCreatePayload,
+  CreateTaskPayload,
+  UpdateTaskPayload,
+} from "@/types/task.type";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function useTasks(projectId: string) {
@@ -23,8 +27,15 @@ export function useCreateTask(projectId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: CreateTaskPayload) =>
-      TaskService.createTask(projectId, payload),
+    mutationFn: () => {
+      const payload: CreateTaskPayload = {
+        title: "Untitled Task",
+        status_id: "e152eec0-fb60-4839-ba14-427a5d503f3a",
+        assignee_ids: null,
+      };
+
+      return TaskService.createTask(projectId, payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
     },
@@ -54,6 +65,25 @@ export function useDeleteTask(projectId: string) {
 
   return useMutation({
     mutationFn: (taskId: string) => TaskService.deleteTask(projectId, taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+    },
+  });
+}
+
+export function useGenerateTask(projectId: string) {
+  return useMutation({
+    mutationFn: () => TaskService.generateTask(projectId),
+  });
+}
+
+export function useBulkCreateTask(projectId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: BulkTaskCreatePayload) => {
+      return TaskService.bulkCreateTask(projectId, payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
     },

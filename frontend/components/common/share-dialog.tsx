@@ -4,6 +4,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -13,16 +14,22 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { ProjectService } from "@/lib/api/project.api";
+import { Input } from "../ui/input";
 
 interface ShareDialogProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   projectName: string;
-  projectId: string; 
+  projectId: string;
 }
 
-export function ShareDialog({ open, onOpenChange, projectName, projectId }: ShareDialogProps) {
-  const [copied, setCopied] = useState(false); 
+export function ShareDialog({
+  open,
+  onOpenChange,
+  projectName,
+  projectId,
+}: ShareDialogProps) {
+  const [copied, setCopied] = useState(false);
   const [generatedLink, setGeneratedLink] = useState("");
 
   const generateMutation = useMutation({
@@ -33,7 +40,7 @@ export function ShareDialog({ open, onOpenChange, projectName, projectId }: Shar
     },
     onError: () => {
       toast.error("Failed to generate link");
-    }
+    },
   });
 
   async function copy() {
@@ -50,45 +57,53 @@ export function ShareDialog({ open, onOpenChange, projectName, projectId }: Shar
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="w-full sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Invite to {projectName}</DialogTitle>
           <DialogDescription>
-            Generate a secure link. Anyone with this link can join this project as a MEMBER.
+            Generate a secure link. Anyone who click this link can join this
+            project as a MEMBER.
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="mt-4 flex items-center gap-2">
-          {/* Pake input readonly biar bisa di-scroll + auto select text */}
-          <input 
+
+        <div className="flex items-center gap-1.5">
+          <Input
             type="text"
             readOnly
             value={generatedLink}
             placeholder="Click generate to create an invite link..."
-            className="flex-1 rounded-md border border-input bg-foreground/5 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary whitespace-nowrap overflow-x-auto cursor-text"
-            onClick={(e) => e.currentTarget.select()} // Biar pas diklik lsg ngeblok semua teks
+            onClick={(e) => e.currentTarget.select}
+            className="flex-1 "
           />
-          
-          <Button 
-            size="sm" 
-            onClick={() => generateMutation.mutate()} 
+
+          <Button
+            size="sm"
+            onClick={() => generateMutation.mutate()}
             disabled={generateMutation.isPending}
             variant="outline"
           >
-            <RefreshCw className={`size-4 mr-1.5 ${generateMutation.isPending ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`size-4 mr-1.5 ${generateMutation.isPending ? "animate-spin" : ""}`}
+            />
             {generatedLink ? "Regenerate" : "Generate"}
           </Button>
+        </div>
 
-          <Button 
-            size="sm" 
-            onClick={copy} 
-            variant={copied ? "secondary" : "default"} 
+        <DialogFooter>
+          <Button
+            onClick={copy}
+            variant={copied ? "secondary" : "default"}
             disabled={!generatedLink || generateMutation.isPending}
+            className="w-full"
           >
-            {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+            {copied ? (
+              <Check className="size-4" />
+            ) : (
+              <Copy className="size-4" />
+            )}
             <span className="ml-1.5">{copied ? "Copied" : "Copy"}</span>
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
