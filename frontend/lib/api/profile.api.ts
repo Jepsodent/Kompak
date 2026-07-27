@@ -1,9 +1,6 @@
 import { UpdateProfilePayload, UserProfile } from "@/types/profile.type";
 import { axiosClient } from "../axios";
 import { NestResponse } from "@/types/api.type";
-import { actionAsyncStorage } from "next/dist/server/app-render/action-async-storage.external";
-import { MagicLinkFormValues } from "@/schemas/auth.schema";
-import { EditProfileFormValues } from "@/schemas/profile.schema";
 
 export const profileService = {
   fetchUserProfile: async (): Promise<UserProfile> => {

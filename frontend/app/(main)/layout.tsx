@@ -11,12 +11,14 @@ type MainLayoutProps = {
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <SidebarProvider>
-      <MainSidebar />
+      <div className="flex w-full min-h-screen">
+        <MainSidebar />
 
-      <div className="w-full h-full border-b border-accent-foreground flex flex-col">
-        <MainTopbar />
+        <div className="min-w-0 flex flex-1 flex-col">
+          <MainTopbar />
 
-        {children}
+          <div className="flex-1 w-full">{children}</div>
+        </div>
       </div>
     </SidebarProvider>
   );

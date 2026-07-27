@@ -1,4 +1,4 @@
-export type Notification = {
+export type GetNotificationPayload = {
   id: string;
   profile_id: string;
   task_id: string;

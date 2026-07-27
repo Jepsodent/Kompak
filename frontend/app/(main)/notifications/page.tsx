@@ -3,86 +3,83 @@
 import NotificationCard from "@/components/notifications/notification_card";
 import GenerateTaskDialog from "@/components/tasks/generate-task.dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Separator } from "@/components/ui/separator";
-import { Notification } from "@/types/notification.type";
-import { useState } from "react";
-
-const NOTIFICATIONS: Notification[] = [
-  {
-    id: "a9eb0bb7-49c0-4453-87c0-d96802ba3b7b",
-    profile_id: "02d46119-da27-42c3-ae55-ae40935aba2a",
-    task_id: "b4de8eb4-708e-48b2-a104-64cc2b62e092",
-    title: "Task Approved!",
-    message:
-      "Your proof of work for task Workflow\n has been approved by the leader and moved to DONE.",
-    channel: "IN_APP",
-    is_read: false,
-    scheduled_at: null,
-    created_at: "2026-07-25T07:43:08.600804+00:00",
-    tasks: {
-      project_id: "01e1f0ce-487b-44cf-aca2-8553b7f713aa",
-    },
-  },
-  {
-    id: "a9eb0bb7-49c0-4453-87c0-d96802ba3b7basd",
-    profile_id: "02d46119-da27-42c3-ae55-ae40935aba2a",
-    task_id: "b4de8eb4-708e-48b2-a104-64cc2b62e092",
-    title: "Task Has been Created",
-    message:
-      "Your proof of work for task Workflow\n has been approved by the leader and moved to DONE.",
-    channel: "IN_APP",
-    is_read: false,
-    scheduled_at: null,
-    created_at: "2026-07-25T07:43:08.600804+00:00",
-    tasks: {
-      project_id: "01e1f0ce-487b-44cf-aca2-8553b7f713aa",
-    },
-  },
-  {
-    id: "a9eb0bb7-49c0-4453-87c0-d96802ba3b7basd",
-    profile_id: "02d46119-da27-42c3-ae55-ae40935aba2a",
-    task_id: "b4de8eb4-708e-48b2-a104-64cc2b62e092",
-    title: "This task is seen!",
-    message:
-      "Your proof of work for task Workflow\n has been approved by the leader and moved to DONE.",
-    channel: "IN_APP",
-    is_read: true,
-    scheduled_at: null,
-    created_at: "2026-07-25T07:43:08.600804+00:00",
-    tasks: {
-      project_id: "01e1f0ce-487b-44cf-aca2-8553b7f713aa",
-    },
-  },
-];
+import { Spinner } from "@/components/ui/spinner";
+import { useGetNotifications } from "@/hooks/useNotification";
+import { Bell, HeartCrack } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function NotificationPage() {
-  const [notifications, setNotifications] =
-    useState<Notification[]>(NOTIFICATIONS);
+  const router = useRouter();
+  const {
+    data: notifications,
+    isLoading: isNotificationsLoading,
+    error: notificationsError,
+  } = useGetNotifications();
 
-  const sortedNotifications = notifications.sort(
-    (prevItem, nextItem) =>
-      new Date(nextItem.created_at).getTime() -
-      new Date(prevItem.created_at).getTime(),
-  );
-  const seenNotifications = sortedNotifications.filter(
-    (notification) => notification.is_read == true,
-  );
-  const unseenNotifications = sortedNotifications.filter(
-    (notification) => notification.is_read == false,
-  );
+  if (isNotificationsLoading) {
+    return (
+      <div className="w-full h-full flex justify-center items-center gap-2">
+        <Spinner className="w-4 h-4" />
+        <span className="text-sm text-muted-foreground">Loading...</span>
+      </div>
+    );
+  }
 
-  //   Reminder: Don't forgot to add conditional rendering when task is loading or failed to fetch
+  if (notificationsError && !notifications) {
+    return (
+      <div className="w-full h-full flex justify-center items-center gap-2">
+        <HeartCrack className="w-4 h-4" />
+        <span className="text-sm text-muted-foreground">
+          Error fetching notifications
+        </span>
+      </div>
+    );
+  }
 
-  // TASK SHEET LOGIC (JUST FOR TESTING)
-  const [isGenerateTaskDialogOpen, setIsGenerateTaskDialogOpen] =
-    useState(false);
+  if (notifications?.all.length === 0) {
+    return (
+      <Empty className="w-full h-full">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Bell />
+          </EmptyMedia>
+
+          <EmptyTitle>No Notifications</EmptyTitle>
+          <EmptyDescription className="max-w-xs">
+            You&apos;re all caught up. New notifications will appear here.
+          </EmptyDescription>
+        </EmptyHeader>
+
+        <EmptyContent>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.refresh()}
+            className="cursor-pointer"
+          >
+            Refresh
+          </Button>
+        </EmptyContent>
+      </Empty>
+    );
+  }
+
+  const seenNotifications = notifications?.seen ?? [];
+  const unseenNotifications = notifications?.unseen ?? [];
 
   return (
-    <div className="w-full p-8 flex flex-col">
-      <h2 className="text-2xl font-bold">Notifications</h2>
-
+    <div className="p-8 w-full flex flex-col">
       {/* NOTIFICATION LIST */}
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {unseenNotifications.map((item) => (
           <NotificationCard
             key={item.id}
@@ -93,9 +90,7 @@ export default function NotificationPage() {
       </div>
 
       <div className="mt-4 flex items-center">
-        <span className="text-sm font-medium">Seen</span>
-        <Separator className="flex-1" />
-        {/* Shadcn/ui's Separator component doesn't work. It would be awesome if someone/you can fix it! */}
+        <span className="block text-sm font-medium">Seen</span>
       </div>
 
       <div className="mt-2 flex flex-col gap-3">
@@ -107,20 +102,6 @@ export default function NotificationPage() {
           />
         ))}
       </div>
-
-      <Button
-        type="button"
-        variant="default"
-        onClick={() => setIsGenerateTaskDialogOpen(true)}
-        className="cursor-pointer"
-      >
-        Generate Task
-      </Button>
-
-      <GenerateTaskDialog
-        open={isGenerateTaskDialogOpen}
-        onOpenChange={setIsGenerateTaskDialogOpen}
-      />
     </div>
   );
 }

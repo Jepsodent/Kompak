@@ -1,6 +1,6 @@
 "use client";
 
-import { Notification } from "@/types/notification.type";
+import { GetNotificationPayload } from "@/types/notification.type";
 import { Card, CardContent } from "../ui/card";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -28,7 +28,7 @@ const NOTIFICATION_CARD_STYLES: Record<
 };
 
 type NotificationCardProps = {
-  notification: Notification;
+  notification: GetNotificationPayload;
   notificationCardStyle: "seen" | "unseen";
 };
 
@@ -67,12 +67,12 @@ export default function NotificationCard({
   };
 
   return (
-    <Card className={cn("w-[600px]", currentStyle.card)}>
+    <Card className={cn("w-[500px]", currentStyle.card)}>
       <CardContent className="flex flex-row gap-4">
         <Info className="w-8 h-8" />
 
         {/* METADATA */}
-        <div className="flex flex-col">
+        <div className="flex flex-col flex-1">
           <h2
             className={cn(
               "text-lg font-bold line-clamp-1 max-w-[60ch]",

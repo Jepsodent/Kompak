@@ -8,7 +8,7 @@ import { Dispatch, SetStateAction } from "react";
 
 type ContributionCardProps = {
   contribution: GetContributionsPayload;
-  setActiveContributionId: Dispatch<SetStateAction<null | string>>;
+  setActiveContributionId: Dispatch<SetStateAction<string>>;
   setIsContributionSheetOpen: Dispatch<SetStateAction<boolean>>;
 };
 
