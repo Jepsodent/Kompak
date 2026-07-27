@@ -100,7 +100,7 @@ export default function ContributionsPage({ params }: ContributionsPage) {
                 <span>Creating...</span>
               </div>
             ) : (
-              "Create Contribution Report"
+              "Create Report"
             )}
           </Button>
         </EmptyContent>
@@ -111,7 +111,7 @@ export default function ContributionsPage({ params }: ContributionsPage) {
   return (
     <div className="w-full h-full flex flex-col items-center gap-2">
       {/* TOOLBAR */}
-      <div className="w-full h-[3rem] flex items-center justify-between">
+      <div className="w-full h-[3rem] flex justify-between items-center ">
         {/* LEFT CONTAINER */}
         <div className="flex items-center gap-1">
           <span className="text-sm text-muted-foreground">Total reports: </span>
@@ -133,7 +133,7 @@ export default function ContributionsPage({ params }: ContributionsPage) {
                 <span>Creating...</span>
               </div>
             ) : (
-              "Create Contribution Report"
+              "Create Report"
             )}
           </Button>
         </div>

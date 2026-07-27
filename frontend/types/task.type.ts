@@ -27,9 +27,9 @@ export interface Task {
 }
 
 export interface CreateTaskPayload {
-  title: string;
+  title?: string;
   description?: string | null;
-  due_date: string;
+  due_date?: string;
   status_id: string;
   assignee_ids?: string[] | null;
 }
@@ -46,4 +46,14 @@ export type GeneratedTask = {
   title: string;
   description: string;
   recommendation_role: string;
+};
+
+export type BulkTaskCreatePayload = {
+  tasks: [
+    title: string,
+    description: string,
+    due_date: string,
+    status_id: string,
+    assignee_ids: string[],
+  ];
 };

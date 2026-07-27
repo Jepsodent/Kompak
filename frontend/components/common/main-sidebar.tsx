@@ -201,7 +201,7 @@ export default function MainSidebar() {
                   )}
 
                 {dashboardData?.recent_projects?.map((project: any) => {
-                  const active = pathname === `/projects/${project.id}`;
+                  const active = pathname.includes(project.id);
 
                   return (
                     <SidebarMenuItem key={project.id}>

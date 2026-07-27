@@ -1,7 +1,13 @@
 import { CreateTaskFormValues } from "@/schemas/task.schema";
 import { axiosClient } from "../axios";
 import { NestResponse } from "@/types/api.type";
-import { CreateTaskPayload, Task, UpdateTaskPayload } from "@/types/task.type";
+import {
+  BulkTaskCreatePayload,
+  CreateTaskPayload,
+  GeneratedTask,
+  Task,
+  UpdateTaskPayload,
+} from "@/types/task.type";
 
 export const TaskService = {
   getTasks: async (projectId: string): Promise<Task[]> => {
@@ -28,6 +34,7 @@ export const TaskService = {
       `/projects/${projectId}/tasks`,
       payload,
     );
+    console.log("Error: " + response.data.message);
 
     return response.data.data;
   },
@@ -49,6 +56,27 @@ export const TaskService = {
     const response = await axiosClient.delete<NestResponse<null>>(
       `/projects/${projectId}/tasks/${taskId}`,
     );
+
+    return response.data.data;
+  },
+
+  generateTask: async (projectId: string): Promise<GeneratedTask[]> => {
+    const response = await axiosClient.post<NestResponse<GeneratedTask[]>>(
+      `/projects/${projectId}/tasks/generate-ai`,
+    );
+
+    return response.data.data;
+  },
+
+  bulkCreateTask: async (
+    projectId: string,
+    payload: BulkTaskCreatePayload,
+  ): Promise<null> => {
+    const response = await axiosClient.post<NestResponse<null>>(
+      `/projects/${projectId}/tasks/bulk`,
+      payload,
+    );
+
     return response.data.data;
   },
 };

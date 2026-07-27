@@ -1,10 +1,9 @@
 "use client";
 
-import { RevampTaskFormValues } from "@/schemas/revamp-task.schema";
 import RevampTaskCard from "../kanban/revamp-task-card";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { GeneratedTask } from "@/types/task.type";
-import { MagicLinkFormValues } from "@/schemas/auth.schema";
+import { Dispatch, SetStateAction } from "react";
 
 const TASKS: GeneratedTask[] = [
   {
@@ -25,16 +24,19 @@ const TASKS: GeneratedTask[] = [
 ];
 
 type GenerateTaskDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isGenerateTaskDialogOpen: boolean;
+  setIsGenerateTaskDialogOpen: Dispatch<SetStateAction<boolean>>;
 };
 
 export default function GenerateTaskDialog({
-  open,
-  onOpenChange,
+  isGenerateTaskDialogOpen,
+  setIsGenerateTaskDialogOpen,
 }: GenerateTaskDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={isGenerateTaskDialogOpen}
+      onOpenChange={setIsGenerateTaskDialogOpen}
+    >
       <DialogContent className="w-full h-full max-w-none! rounded-none flex flex-col lg:h-[800px] lg:w-[1000px] md:rounded-lg lg:flex-row  items-center">
         {/* GENERATED TASKS */}
         <div className="w-[40%] h-full">

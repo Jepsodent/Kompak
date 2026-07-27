@@ -44,13 +44,26 @@ interface KanbanBoardProps {
   tasks: Task[];
   setTasks: Dispatch<SetStateAction<Task[]>>;
   onEditTask?: (task: Task) => void;
+
+  selectedTaskId: string | null;
+  setSelectedTaskId: Dispatch<SetStateAction<string | null>>;
+  isEditTaskDialog: boolean;
+  setIsEditTaskDialog: Dispatch<SetStateAction<boolean>>;
+  isDeleteTaskDialogOpen: boolean;
+  setIsDeleteTaskDialogOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function KanbanBoard({
   projectId,
   tasks,
   setTasks,
-  onEditTask,
+
+  selectedTaskId,
+  setSelectedTaskId,
+  isEditTaskDialog,
+  setIsEditTaskDialog,
+  isDeleteTaskDialogOpen,
+  setIsDeleteTaskDialogOpen,
 }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<any | null>(null);
   const [previousTasks, setPreviousTasks] = useState<Task[]>([]);
@@ -162,7 +175,7 @@ export default function KanbanBoard({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-y-auto">
+      <div className="flex gap-2 overflow-y-auto">
         {COLUMNS.map((col) => (
           <KanbanColumn
             key={col.id}
@@ -170,14 +183,28 @@ export default function KanbanBoard({
             id={col.id}
             title={col.name}
             tasks={tasks.filter((t) => t.status?.id === col.id)}
-            onEditTask={onEditTask}
+            selectedTaskId={selectedTaskId}
+            setSelectedTaskId={setSelectedTaskId}
+            isEditTaskDialog={isEditTaskDialog}
+            setIsEditTaskDialog={setIsEditTaskDialog}
+            isDeleteTaskDialogOpen={isDeleteTaskDialogOpen}
+            setIsDeleteTaskDialogOpen={setIsDeleteTaskDialogOpen}
           />
         ))}
       </div>
 
       <DragOverlay>
         {activeTask ? (
-          <TaskCard projectId={projectId} task={activeTask} />
+          <TaskCard
+            projectId={projectId}
+            task={activeTask}
+            selectedTaskId={selectedTaskId}
+            setSelectedTaskId={setSelectedTaskId}
+            isEditTaskDialog={isEditTaskDialog}
+            setIsEditTaskDialog={setIsEditTaskDialog}
+            isDeleteTaskDialogOpen={isDeleteTaskDialogOpen}
+            setIsDeleteTaskDialogOpen={setIsDeleteTaskDialogOpen}
+          />
         ) : null}
       </DragOverlay>
     </DndContext>
